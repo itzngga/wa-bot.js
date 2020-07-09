@@ -6,7 +6,7 @@ pm2.connect((error) => {
       process.exit(2)
     }
   
-    pm2.start({ script: 'bot.js', error_log: 'BOTerror.log' }, (error, apps) => {
+    pm2.start({ script: 'bot.js' }, (error, apps) => {
       pm2.disconnect() // Disconnects from PM2
   
       if (error) {

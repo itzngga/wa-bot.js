@@ -1,15 +1,16 @@
 const fs = require('fs');
-const { Client, Location } = require('./index');
+const { Client, Location, MessageMedia } = require('./index');
 var parseString = require('xml2js').parseString;
-const axios= require('axios').default;
+const axios = require('axios').default;
 const striptags = require('striptags');
 const pm2 = require('pm2');
-const { MessageMedia } = require('./index');
 const path = require('path');
-const gTTs = require('gtts');
-const { isNullOrUndefined } = require('util');
 const { send } = require('process');
 const { resolve } = require('path');
+const help = require('./help.js');
+const google = require('google-it');
+const gTTs = require('gtts');
+const { isNullOrUndefined } = require('util');
 let Sadmin = "6281297980063";
 var datan = fs.readFileSync('./admin.json');
 var set = fs.readFileSync('./setting.json');
@@ -21,8 +22,18 @@ let sessionCfg;
 if (fs.existsSync(SESSION_FILE_PATH)) {
     sessionCfg = require(SESSION_FILE_PATH);
 }
-const client = new Client({ puppeteer: { headless: true, executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe' }, session: sessionCfg});
+const client = new Client({ puppeteer: { headless: true, executablePath: 'C:\/Program Files (x86)\/Google\/Chrome\/Application\/chrome.exe' }, session: sessionCfg});
 client.initialize();
+
+if (typeof Array.prototype.splice === 'undefined') {
+    Array.prototype.splice = function (index, howmany, elemes) {
+        howmany = typeof howmany === 'undefined' || this.length;
+        var elems = Array.prototype.slice.call(arguments, 2), newArr = this.slice(0, index), last = this.slice(index + howmany);
+        newArr =  newArr.concat.apply(newArr, elems);
+        newArr =  newArr.concat.apply(newArr, last);
+        return newArr;
+    }
+}
 
 setInterval(() => {
     pm2.describe('bot', (error, scripts) => {
@@ -78,9 +89,20 @@ function generate(n) {
 
     return ("" + number).substring(add); 
 }
+function filterWord(text) {
+    arrWord = ['tuhan','dewa','yesus','krisna','allah','atheis','agama','buddha','biksu','ulama','ustadz','habib','nabi','rasul','god','theis'];
+    if (arrWord.includes(text.toLowerCase())) {
+        return false;
+    }else{
+        return true;
+    }
+}
+
 var isSimSimi = setting.isSimSimi;
 var simSimichat = setting.simSimichat;
 var isEnableChat = setting.isEnableChat;
+var mutedChat = setting.mutedChat;
+var bannedList = setting.bannedList;
 client.on('message', async msg => {
     try {
         console.log("\x1b[32m"+'[INFO] MESSAGE RECEIVED --> '+`"${msg.body}"` + "\x1b[0m" + "\n");
@@ -94,27 +116,56 @@ client.on('message', async msg => {
         }
         let chkadmin = admin.includes(yNumber);
         let isSadmin = yNumber === Sadmin;
+        let isMuted = mutedChat.includes(chats.id._serialized);
+        let isNotBan = !bannedList.includes(yNumber);
+        let isNotMuted = !isMuted;
         console.log("\x1b[35m"+"[CHECKING] SENDER IS_ADMIN : " + isSadmin + "\x1b[0m");
-        if (isEnableChat || isSadmin || chkadmin) {
+        
+        if (msg.body == '!mute' && isNotBan) {
+            if (isNotMuted) {
+                mutedChat.push(chats.id._serialized);
+                setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.simSimichat = simSimichat;
+                setting.mutedChat = mutedChat;
+                setting.bannedList = bannedList;
+                fs.writeFileSync('setting.json', JSON.stringify(setting, null, 2));
+                msg.reply("Bot telah di mute pada chat ini! !unmute untuk unmute");
+            }else if(isMuted){
+                msg.reply("Chat ini telah di Mute!");
+            }
+        }else if (msg.body == '!unmute' && isNotBan) {
+            if (isMuted) {
+                let index = mutedChat.indexOf(chats.id._serialized);
+                mutedChat.splice(index, 1);
+                setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
+                setting.mutedChat = mutedChat;
+                fs.writeFileSync('setting.json', JSON.stringify(setting, null, 2));
+                msg.reply("Chat telah di unmute!");
+            }else{
+                msg.reply("Chat ini tidak di mute!");
+            }
+        }
+        if (isEnableChat && isNotMuted && isNotBan || isSadmin || chkadmin) {
             if (msg.body === ""){
-                console.log("\x1b[31m" + "[INFO] MEDIA RECEIVED" + "\x1b[0m" + "\n");    
-            }else if (msg.body == 'Assalamu\'alaikum') {
+                console.log("\x1b[31m" + "[INFO] MEDIA RECEIVED" + "\x1b[0m" + "\n");
+                client.sendSeen(msg.from);   
+            }else if (msg.body.toLowerCase().includes('assalamu\'alaikum')) {
                 // Send a new message as a reply to the current one
                 msg.reply('Walaikumussalam wbrkt');
-            } else if (msg.body == 'Assalamualaikum') {
+            } else if (msg.body.toLowerCase().includes('assalamualaikum')) {
                 // Send a new message as a reply to the current one
                 msg.reply('Walaikumussalam wbrkt');
-            } else if (msg.body == 'Samlikum') {
-                // Send a new message as a reply to the current one
+            } else if (msg.body.toLowerCase().includes('Samlikum')) {
                 msg.reply('Walaikum');
             } else if (msg.body == '@bot') {
-                // Send a new message as a reply to the current one
                 msg.reply('Ya, saya aktif');
             } else if (msg.body == '@p') {
-                // Send a new message as a reply to the current one
                 msg.reply('Ya bro ada apa?');
             } else if (msg.body == '!ping') {
-                // Send a new message to the same chat
                 client.sendMessage(msg.from, 'pong');
             } else if(msg.body == '!everyone' && chkadmin) {
                 const chat = await msg.getChat();
@@ -130,7 +181,7 @@ client.on('message', async msg => {
                 } else {
                     msg.reply('This command can only be used in a group!');
                 }
-            } else if (msg.body.startsWith('!sendto ') && yNumber === Sadmin) {
+            } else if (msg.body.startsWith('!sendto ') && isSadmin) {
                 let number = msg.body.split(' ')[1];
                 if (number.substr(0, 1) === "@") {
                     number = number.replace(/@/g, "");
@@ -145,11 +196,22 @@ client.on('message', async msg => {
                 }else{
                     msg.reply("Invalid number format");
                 }
-            } else if (msg.body == '@bot uptime'){
-                pm2.describe('bot', (error, scripts) => {
-                    let uptime = scripts[0].pm2_env.pm_uptime
-                    msg.reply(uptime);
-                })
+            } else if (msg.body == '@bot status'){
+                let a, b, c;
+                if (isEnableChat){
+                    a = "On";
+                }else{
+                    a = "Off";
+                }
+                if(isSimSimi){
+                    b = "On";
+                }else{
+                    b = "Off";
+                }
+                if (simSimichat === "undefined") {
+                    c = "Tidak Ada";
+                }
+                msg.reply(`Chat Mode : ${a}\nSimSimi Mode : ${b}\nSimSimi Number : ${c}`);
             } else if (msg.body.startsWith('!subject ') && chkadmin) {
                 // Change the group subject
                 let chat = await msg.getChat();
@@ -159,6 +221,14 @@ client.on('message', async msg => {
                 } else {
                     msg.reply('This command can only be used in a group!');
                 }
+            } else if (msg.body.startsWith('!google ')) {
+                let dict = msg.body.slice(8);
+                google({'query': dict, 'limit': "2"}).then(results => {
+                    let vars = results[0];
+                    msg.reply(`[Hasil Pencarian Google]\n\nJudul : \n${vars.title}\n\nDeskripsi : \n${vars.snippet}\n\nLink : \n${vars.link}`);
+                  }).catch(e => {
+                    msg.reply(e);
+                  })
             } else if (msg.body.startsWith('!mimic ')) {
                 // Replies with the same message
                 msg.reply(msg.body.slice(6));
@@ -175,6 +245,7 @@ client.on('message', async msg => {
                 // Leave the group
                 let chat = await msg.getChat();
                 if (chat.isGroup) {
+                    chat.delete();
                     chat.leave();
                 } else {
                     msg.reply('This command can only be used in a group!');
@@ -191,11 +262,13 @@ client.on('message', async msg => {
             } else if (msg.body == '!groupinfo') {
                 let chat = await msg.getChat();
                 if (chat.isGroup) {
+                    let date = new Date(chat.createdAt);
+                    date = date.toLocaleString();
                     msg.reply(`
 ---[Detail Group]---
 Nama: ${chat.name}
 Deskrpsi: ${chat.description}
-Dibuat pada: ${chat.createdAt.toString()}
+Dibuat pada: ${date}
 Dibuat oleh: ${chat.owner.user}
 Jumlah anggota: ${chat.participants.length}
                     `);
@@ -241,7 +314,7 @@ Has Media? ${quotedMsg.hasMedia}
                 const quotedMsg = await msg.getQuotedMessage();
                 if (quotedMsg.hasMedia) {
                     const attachmentData = await quotedMsg.downloadMedia();
-                    chat.sendMessage(attachmentData, { caption: 'Nih biar g tenggelem', sendAudioAsVoice: true });
+                    await chat.sendMessage(attachmentData, { caption: 'Nih biar g tenggelem', sendAudioAsVoice: true });
                 }
             } else if (msg.body == '!location') {
                 msg.reply(new Location(37.422, -122.084, 'Googleplex\nGoogle Headquarters'));
@@ -252,11 +325,6 @@ Has Media? ${quotedMsg.hasMedia}
                 axios.get(`http://127.0.0.1:5000/kbbi/${dict}`).then((res) => {
                     msg.reply(res.data.hasil);
                 })
-                // var spawn = require("child_process").spawn;
-                // var process = spawn('C:\\Users\\Admin01\\AppData\\Local\\Programs\\Python\\Python38\\python.exe',["pykbbi.py", dict]);
-                // process.stdout.on('data', function(data) { 
-                //     msg.reply(data.toString()); 
-                // })
             } else if (msg.body.startsWith('!status ') && chkadmin) {
                 const newStatus = msg.body.split(' ')[1];
                 await client.setStatus(newStatus);
@@ -299,7 +367,8 @@ Has Media? ${quotedMsg.hasMedia}
                         return nf.format(str);
                     }
                     var date = new Date(id.lastUpdate);
-                    var bn = `╭──[ Kasus Covid19 di Dunia]───\n├ Positif : ${intl(hasil.confirmed.value)} Kasus\n├ Sembuh : ${intl(hasil.recovered.value)} Kasus\n├ Meninggal : ${intl(hasil.deaths.value)} Kasus\n├──[ Kasus Covid19 di Indonesia]───\n├ Positif : ${intl(id.confirmed.value)} Kasus \n├ Sembuh : ${intl(id.recovered.value)} Kasus \n├ Meninggal : ${intl(id.deaths.value)} Kasus\n├ ${date}\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ @ItzNgga WhatsApp Bot ]───`;
+                    date = date.toLocaleString();
+                    var bn = `╭──[ Kasus Covid19 di Dunia]───\n├ Positif : ${intl(hasil.confirmed.value)} Kasus\n├ Sembuh : ${intl(hasil.recovered.value)} Kasus\n├ Meninggal : ${intl(hasil.deaths.value)} Kasus\n├──[ Kasus Covid19 di Indonesia]───\n├ Positif : ${intl(id.confirmed.value)} Kasus \n├ Sembuh : ${intl(id.recovered.value)} Kasus \n├ Meninggal : ${intl(id.deaths.value)} Kasus\n├ Update Terakhir : ${date}\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ @ItzNgga WhatsApp Bot ]───`;
                     msg.reply(bn);
                 })
             } else if (msg.body.startsWith('!ceknama ')) {
@@ -317,37 +386,51 @@ Has Media? ${quotedMsg.hasMedia}
                     msg.reply("Alamat ip tidak ada atau tidak valid")
                 })
             } else if (msg.body.startsWith("?apakah ")) {
-                let int = Math.floor(Math.random() * 2);
-                let hasil; 
-                if (int === 1) {
-                    hasil = "Iya";
+                let dict = msg.body.slice(8);
+                let filter = filterWord(dict);
+                if (filter) {
+                    let int = Math.floor(Math.random() * 3);
+                    let hasil; 
+                    if (int === 1) {
+                        hasil = "Iya";
+                    }else if(int === 0){
+                        hasil = "Tidak";
+                    }else if(int === 2){
+                        hasil = "Mungkin";
+                    }
+                    msg.reply(hasil);
                 }else{
-                    hasil = "Tidak";
+                    msg.reply("Dijaga bro ketikan mu itu!");
                 }
-                msg.reply(hasil);
             } else if (msg.body.startsWith("?kapan ")) {
-                let int = Math.floor(Math.random() * 9) + 1;
-                let hasil;
-                if (int === 1) {
-                    hasil = "Besok";
-                }else if (int === 2) {
-                    hasil = "Kemarin";
-                }else if (int === 3) {
-                    hasil = "Lusa";
-                }else if (int === 4) {
-                    hasil = "Hari Ini";
-                }else if (int === 5) {
-                    hasil = "Minggu Depan";
-                }else if (int === 6) {
-                    hasil = "Bulan Depan";
-                }else if (int === 7) {
-                    hasil = "Tahun Depan";
-                }else if (int === 8) {
-                    hasil = "Sekarang";
-                }else if (int === 9) {
-                    hasil = "Gak Tau";
+                let dict = msg.body.slice(7);
+                let filter = filterWord(dict);
+                if (filter) {
+                    let int = Math.floor(Math.random() * 9) + 1;
+                    let hasil;
+                    if (int === 1) {
+                        hasil = "Besok";
+                    }else if (int === 2) {
+                        hasil = "Kemarin";
+                    }else if (int === 3) {
+                        hasil = "Lusa";
+                    }else if (int === 4) {
+                        hasil = "Hari Ini";
+                    }else if (int === 5) {
+                        hasil = "Minggu Depan";
+                    }else if (int === 6) {
+                        hasil = "Bulan Depan";
+                    }else if (int === 7) {
+                        hasil = "Tahun Depan";
+                    }else if (int === 8) {
+                        hasil = "Sekarang";
+                    }else if (int === 9) {
+                        hasil = "Gak Tau";
+                    }
+                    msg.reply(hasil);
+                }else{
+                    msg.reply("Dijaga bro ketikan mu itu!");
                 }
-                msg.reply(hasil);
             } else if (msg.body.startsWith("!game\n")) {
                 let dict = msg.body.split('\n');
                 let hasil;
@@ -401,7 +484,7 @@ Has Media? ${quotedMsg.hasMedia}
                         client.sendMessage(`${noWW}@c.us`, "[WW] Silahkan pilih korban anda, dengan alias (batas waktu 15 detik!)");
                         let killed = "undefined";
                         client.on('message', (msg) => {
-                            if (msg.body === '/ww kill ' && isPlayer) {
+                            if (msg.body.startsWith('/ww kill ') && isPlayer) {
                                 if (!chat.isGroup) {
                                     killed = msg.body.split(' ')[2];
                                     if(aliases.includes(killed && !killeds.includes(killed))){
@@ -424,7 +507,7 @@ Has Media? ${quotedMsg.hasMedia}
                             chat.sendMessage(`[WW] ${killed} ditemukan telah terbunuh oleh werewolf malam ini!`);
                             chat.sendMessage(`[WW] karena curiga, akhirnya kepala desa geram dan memutuskan voting untuk mencari werewolf dan membununya!, batas waktu vote adalah 25 detik!`)
                             client.on('message', (msg) => {
-                                if (msg.body === '/ww vote ' && isPlayer) {
+                                if (msg.body.startsWith('/ww vote ') && isPlayer) {
                                     if(killeds.length <= 5){
                                         korban = msg.body.split(' ')[2];
                                         Object.keys(aliases).forEach(function(i){
@@ -526,28 +609,35 @@ ${ket}`);
                     msg.reply(`Error, surah ${dict} tidak valid\nNggak pernah ngaji loe?`);
                 }
             } else if (msg.body.startsWith('!gtts ')) {
+                const chat = await msg.getChat();
                 let dict = msg.body.slice(6);
                 var gtts = new gTTs(dict, 'id');
-                gtts.save('hasil.wav', function (err) {
+                gtts.save('hasil.mp3', function (err) {
                     if(err) { throw new Error(err)}
-                    let hasil = fs.readFileSync('hasil.wav', {encoding: 'base64'});  
-                    const media = new MessageMedia('audio/wav', hasil);
-                    client.sendMessage(msg.from, media, { sendAudioAsVoice: true});
+                    let hasil = fs.readFileSync('hasil.mp3', {encoding: 'base64'});  
+                    const media = new MessageMedia('audio/mpeg', hasil);
+                    chat.sendMessage(media, { sendAudioAsVoice: true});
                 })
             } else if (msg.body.startsWith('!lang ')) {
-                let lang = msg.body.split(' ')[1];
-                let dict = msg.body.slice(9);
-                var gtts = new gTTs(dict, `${lang}`);
-                gtts.save('hasil.wav', function (err) {
-                    if(err) { throw new Error(err)}
-                    const hasil = fs.readFileSync('hasil.wav', {encoding: 'base64'});
-                    const media = new MessageMedia('audio/wav', hasil);
-                    client.sendMessage(msg.from, media, { sendAudioAsVoice: true});
-                })
+                try {
+                    const chat = await msg.getChat();
+                    let lang = msg.body.split(' ')[1];
+                    let dict = msg.body.slice(9);
+                    var gtts = new gTTs(dict, `${lang}`);
+                    gtts.save('hasil.mp3', function (err) {
+                        if(err) { throw new Error(err)}
+                        const hasil = fs.readFileSync('hasil.mp3', {encoding: 'base64'});
+                        const media = new MessageMedia('audio/mpeg', hasil);
+                        chat.sendMessage(media, { sendAudioAsVoice: true});
+                    })
+                } catch (error) {
+                    msg.reply(error.toString());
+                }
             } else if (msg.body == '!1cak') {
+                msg.reply("Memprosess Gambar..."); 
                 let chat = await msg.getChat();
                 axios.get(`https://beta.moe.team/api/1cak/?apikey=McJNTmAfdBmO1hYk7gREmVBmtrxiywJtqN3uI7ZRNlMK7MiMwLVUVUQUzAtt6qrv`).then((res) => {
-                    let title = res.data.result.title
+                let title = res.data.result.title
                     let url = res.data.result.image
                     axios.get(url, {
                         responseType: 'arraybuffer'
@@ -558,14 +648,38 @@ ${ket}`);
                         chat.sendMessage(media, {caption: title});
                     })
                 })
-            } else if (msg.body.startsWith('!admin ') && yNumber === Sadmin) {
+            } else if (msg.body.startsWith('@bot bc ') && isSadmin){
+                 let chat = await client.getChats();
+                 let dict = msg.body.slice(8);
+                 chat.forEach(function(val){
+                     if (!mutedChat.includes(val.id._serialized)) {
+                        client.sendMessage(val.id._serialized, `[ItzNgga BOT Broadcast]\n\n${dict}`);
+                     }
+                 })
+                 msg.reply("Broadcast Succes!");
+            } else if (msg.body == '@bot getchats'){
+                let chat = await client.getChats();
+                let hasil;
+                for (let val of chat){
+                    hasil += `\nID : ${val.id._serialized} \n isGroup? : ${val.isGroup}\n`
+                }
+                msg.reply(hasil);
+            } else if (msg.body.startsWith('!send ') && chkadmin) {
+                let number = msg.body.split(" ")[1];
+                let index = 6 + number.length + 1;
+                let message = msg.body.slice(index);
+                client.sendMessage(number, message);
+            } else if (msg.body.startsWith('!admin ') && isSadmin) {
                 try {
                     let dict = msg.body.split(' ')[1];
+                    if (dict.substr(0, 1) === "@") {
+                        dict = dict.replace(/@/g, "");
+                    }
                     if(dict.charAt(0) !== "0"){
                         if(!isNaN(dict)){
                             console.log("Trying to add admin");
                             admin.push(dict);
-                            var b = JSON.stringify(admin);
+                            var b = JSON.stringify(admin, null, 2);
                             fs.writeFile("admin.json", b, finished);
                             function finished(err){
                                 msg.reply(`Success menambahkan ${dict} ke admin!`);
@@ -577,20 +691,50 @@ ${ket}`);
                 } catch (error) {
                     console.log(error);
                 }
-            } else if (msg.body == '@bot chat on' && isSadmin && isEnableChat === false) {
+            } else if (msg.body.startsWith('!unadmin ') && isSadmin) {
+                let dict = msg.body.split(' ')[1];
+                if (dict.substr(0, 1) === "@") {
+                    dict = dict.replace(/@/g, "");
+                }
+                if(dict.charAt(0) !== "0"){
+                    if(!isNaN(dict)){
+                        console.log("Trying to remove admin");
+                        let hs = admin.indexOf(dict);
+                        admin.splice(hs, 1);
+                        var b = JSON.stringify(admin, null, 2);
+                        fs.writeFile("admin.json", b, finished);
+                        function finished(err){
+                            msg.reply(`Success menghapus admin ${dict}!`);
+                        }
+                    }
+                }else{
+                    msg.reply("Invalid nomor telpon")
+                }
+            } else if (msg.body == '@bot chat on' && isSadmin) {
                 isEnableChat = true;
                 setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.mutedChat = mutedChat;
+                setting.bannedList = bannedList;
+                setting.simSimichat = simSimichat;
                 msg.reply("Mode Chat Diaktifkan!");
                 let hasil = JSON.stringify(setting, null, 2);
                 fs.writeFileSync('setting.json', hasil);
-            } else if (msg.body == '@bot chat off' && isSadmin && isEnableChat === true) {
+            } else if (msg.body == '@bot chat off' && isSadmin) {
                 isEnableChat = false;
                 msg.reply("Mode Chat Dinonaktifkan!");
                 setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.mutedChat = mutedChat;
+                setting.bannedList = bannedList;
+                setting.simSimichat = simSimichat;
                 let hasil = JSON.stringify(setting, null, 2);
                 fs.writeFileSync('setting.json', hasil);
             } else if (msg.body.startsWith('!igstalk ')) {
                 const dict = msg.body.split(' ')[1];
+                if (dict.includes("@")) {
+                    dict = dict.replace("@", "");
+                }
                 axios.get(`https://beta.moe.team/api/igprofile/?apikey=McJNTmAfdBmO1hYk7gREmVBmtrxiywJtqN3uI7ZRNlMK7MiMwLVUVUQUzAtt6qrv&username=${dict}`).then((res) => {
                     let hs = res.data.result.user;
                     let prvate = hs.is_private;
@@ -603,7 +747,7 @@ ${ket}`);
                     }
                     let hasil = `╭──[ Hasil Stalk IG ]───\n├ Username : ${hs.username}\n├ Nama : ${hs.full_name}\n├ Bio : ${hs.biography_with_entities.raw_text}\n├ Jumlah Media Post : ${hs.media_count}\n├ Mengikuti : ${followed}\n├ Pengikut : ${followers}\n├ Akun Private?  : ${prvate}\n╰──[ @ItzNgga WhatsApp Bot ]───`;
                     msg.reply(hasil);
-                });
+                }).catch((err) => msg.reply(`Error User ${dict} tidak ada!`));
             } else if (msg.body == '!quran') {
                 axios.get('https://api.banghasan.com/quran/format/json/acak').then((res) => {
                     const sr = /{(.*?)}/gi;
@@ -613,27 +757,74 @@ ${ket}`);
                     msg.reply(hasil);
                 })
             } else if (msg.body === '!media') {
-                let hasil = `╭─────[ Media Help List ]──────\n├> !cekresi [NoResi] [kurir] (cek resi)\n├> !corona (info kasus covid19 terkini)\n├> !ipcheck [ip] (cek ip target)\n├> !ceknama [nama] (Arti nama lu)\n├> !igstalk [username] (stalk gebetanmu)\n├> !bmkg (info gempa bmkg terbaru)\n├> !quran (ayat acak alquran)\n├> !kbbi [kata] (lihat arti kata dalam kbbi)\n├> !surah [no surah] (lihat detail surah)\n├> !surah [no surah] ayat [parameter]\n├> parameter = ayat [1], ayat [2,3] ayat [2-5]\n├> !1cak (meme acak dari 1cak)\n├> !nuked (kode nuklir random)\n├> !gtts [kata] (Google Text To Speech ID)\n├> ?apakah [pertanyaan] note: anda tanya anda terima jawabannya\n├> !help (list command bot)\n╰──[ @ItzNgga WhatsApp Bot ]───`;
+                let hasil = help.helpMedia;
+                msg.reply(hasil);
+            } else if (msg.body === '?simsimi') {
+                let hasil = help.helpSimSimi;
+                msg.reply(hasil);
+            } else if (msg.body === '!list surah') {
+                let hasil = help.listSurah;
+                msg.reply(hasil);
+            } else if (msg.body === '!list surah 2') {
+                let hasil = help.listSurah2;
                 msg.reply(hasil);
             } else if (msg.body === '!help') {
+                let hasil = help.helpMessage;
+                msg.reply(hasil);
+            } else if (msg.body === '!help admin'){
                 if (chkadmin){
-                    let hasil = `╭──────[ Admin Help List 1 ]──────\n├> !everyone (mention semua anggota group)\n├> !arsip (arsipkan chat agar privasi terjaga)\n├> !desc [text] (mengganti deksripsi group)\n├> !delete {reply chat} (delete chat bot)\n├> !status [text] (mengganti status bot)\n├> !resend {reply chat} (mengirim ulang foto)\n├> !quoteinfo {reply chat} (info chat tertentu)\n├> !mediainfo {reply chat} (info media tertentu)\n├> !join [link group] (join ke group)\n├> !leave (keluar dari group ini)\n├> !subject [text] (mengganti nama group)\n├> !help 2 (help selanjutnya)\n├────────────────\n├ untuk request admin, WA :\n├─> 081297980063 (bersyarat)\n├────────────────\n├ Status Admin : Aktif\n├────────────────\n╰──[ @ItzNgga WhatsApp Bot ]───`;
-                    msg.reply(hasil);
-                }else{
-                    let hasil = `╭──────[ Public Help List ]──────\n├> !mute (sumpel mulut bot selama 20detik)\n├> !arsip (arsipkan chat agar privasi terjaga)\n├> !me (bot menyapa anda)\n├> !location (lokasi gooogle)\n├> !info (informasi bot)\n├> !groupinfo (info group ini)\n├> @bot (untuk tes keaktifan bot)\n├> @p (untuk tes keaktifan bot)\n├> !media (List Fungsi Media)\n├────────────────\n├ untuk request admin, WA :\n├─> 081297980063 (bersyarat)\n├────────────────\n├ Status Admin : NonAktif\n├────────────────\n╰──[ @ItzNgga WhatsApp Bot ]───`;
+                    let hasil = help.helpAdmin1;
                     msg.reply(hasil);
                 }
-            } else if (msg.body === '!help 2'){
+            } else if (msg.body === '!help admin 2'){
                 if(chkadmin){
-                    let hasil = `╭──────[ Admin Help List 2 ]──────\n├> !typing (bot menggetik)\n├> !recording (bot ngirim suara)\n├> !clear (bot tidak melakukan apa2)\n├> !mute (sumpel mulut bot selama 20detik)\n├> !me (bot menyapa anda)\n├> !location (lokasi gooogle)\n├> !info (informasi bot)\n├> !groupinfo (info group ini)\n├> @bot (untuk tes keaktifan bot)\n├> @p (untuk tes keaktifan bot)\n├> !media (List Fungsi Media)\n├────────────────\n├ untuk request admin, WA :\n├─> 081297980063 (bersyarat)\n├────────────────\n├ Status Admin : Aktif\n├────────────────\n╰──[ @ItzNgga WhatsApp Bot ]───`;
-                    msg.reply(hasil);
-                }else{
-                    let hasil = `╭──────[ Public Help List ]──────\n├> !mute (sumpel mulut bot selama 20detik)\n├> !arsip (arsipkan chat agar privasi terjaga)\n├> !me (bot menyapa anda)\n├> !location (lokasi gooogle)\n├> !info (informasi bot)\n├> !groupinfo (info group ini)\n├> @bot (untuk tes keaktifan bot)\n├> @p (untuk tes keaktifan bot)\n├> !media (List Fungsi Media)\n├────────────────\n├ untuk request admin, WA :\n├─> 081297980063 (bersyarat)\n├────────────────\n├ Status Admin : NonAktif\n├────────────────\n╰──[ @ItzNgga WhatsApp Bot ]───`;
+                    let hasil = help.helpAdmin2;
                     msg.reply(hasil);
                 }
+            } else if (msg.body === '!help public'){
+                if(chkadmin){
+                    let hasil = help.helpPublic;
+                    msg.reply(hasil);
+                }
+            } else if (msg.body.startsWith("!bug report ")){
+                let dict = msg.body.slice(12);
+                let bugd = fs.readFileSync('bugs.json');
+                let bugs = JSON.parse(bugd);
+                let number = bugs.length + 1;
+                let js = {"number": `${number}`, "sender": chats.id._serialized, "text": dict, "status": "unfixed"};
+                bugs.push(js);
+                bugs = JSON.stringify(bugs, null, 2);
+                fs.writeFileSync('bugs.json', bugs);
+                msg.reply("Bug Sudah di Laporkan!");
+            } else if (msg.body == "!bug read" && isSadmin){
+                let bugv = fs.readFileSync('bugs.json');
+                let bugb = JSON.parse(bugv);
+                let hasil;
+                let dict = bugb
+                for(let i = 0;i < dict.length;i++) {
+                    hasil += `\nNomor Bug : ${dict[i].number}\n`;
+                    hasil += `Sender Bug : ${dict[i].sender}\n`;
+                    hasil += `Informasi Bug : ${dict[i].text}\n`;
+                    hasil += `Bug Fixed? : ${dict[i].status}\n`;
+                }
+                msg.reply(hasil.replace("undefined", ""));
+            } else if (msg.body.startsWith("!bug reply ") && isSadmin){
+                let dict = msg.body.split(" ")[2];
+                let msgs = msg.body.slice(12+dict.length);
+                let bugs = JSON.parse(fs.readFileSync('bugs.json'));
+                let num = bugs[dict];
+                client.sendMessage(bugs[dict].sender, `[BUG REPORT REPLY]\n\n ${msgs}`);
+                msg.reply("Feedback bug sukses!");
+            } else if (msg.body.startsWith("!bug delete ") && isSadmin){
+                let dict = msg.body.split(" ")[2];
+                let bugs = JSON.parse(fs.readFileSync('bugs.json'));
+                bugs = bugs.splice(dict,1);
+                bugs = JSON.stringify(bugs,null,2);
+                fs.writeFileSync('bugs.json', bugs);
+                msg.reply(`Sukses Menghapus Bug ${dict}`);
             } else if (msg.body === '!adminlist' && isSadmin) {
                 let hasil = `╭──[ Admin List ]───`;
-                admin.forEach(function (value, i) {
+                admin.forEach(function (value) {
                     hasil += `\n├─> ${value}`;
                 });
                 hasil += `\n╰──[ @ItzNgga WhatsApp Bot ]───`;
@@ -669,12 +860,12 @@ ${ket}`);
                     msg.reply(`Kurir ${kurir} tidak ada atau penulisan salah!`);
                     chat.sendMessage("Contoh kurir : jne, pos, jnt, sicepat, tiki, anteraja, wahana, ninja, lion, lek");
                 }
-            } else if (msg.body === '!mute') {
-                const chat = await msg.getChat();
-                // mute the chat for 20 seconds
-                const unmuteDate = new Date();
-                unmuteDate.setSeconds(unmuteDate.getSeconds() + 20);
-                await chat.mute(unmuteDate);
+            // } else if (msg.body === '!mute') {
+            //     const chat = await msg.getChat();
+            //     // mute the chat for 20 seconds
+            //     const unmuteDate = new Date();
+            //     unmuteDate.setSeconds(unmuteDate.getSeconds() + 20);
+            //     await chat.mute(unmuteDate);
             } else if (msg.body === '!typing' && chkadmin) {
                 const chat = await msg.getChat();
                 // simulates typing in the chat
@@ -687,26 +878,59 @@ ${ket}`);
                 const chat = await msg.getChat();
                 // stops typing or recording in the chat
                 chat.clearState();
+            } else if (msg.body.startsWith('!ban ') && chkadmin){
+                let dict = msg.body.split(" ")[1];
+                if (dict.substr(0, 1) === "@") {
+                    dict = dict.replace(/@/g, "");
+                }
+                setting.bannedList.push(dict);
+                setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
+                setting.mutedChat = mutedChat;
+                let hasil = JSON.stringify(setting, null, 2);
+                msg.reply(`Sukses ban ${dict}`);
+            } else if (msg.body.startsWith('!unban ') && chkadmin){
+                let dict = msg.body.split(" ")[1];
+                if (dict.substr(0, 1) === "@") {
+                    dict = dict.replace(/@/g, "");
+                }
+                let index = setting.bannedList.indexOf(dict);
+                setting.bannedList = setting.bannedList.splice(index,1);
+                setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
+                setting.mutedChat = mutedChat;
+                let hasil = JSON.stringify(setting, null, 2);
+                msg.reply(`Sukses unban ${dict}`);
             } else if (msg.body === '!simsimi' && isSimSimi === false){
                 msg.reply("Mode SimSimi diaktifkan di chat ini");
                 chats.sendMessage("Jangan lupa di matikan ya ^_^ pakai !simsimi stop");
                 isSimSimi = true;
-                simSimichat = `${yNumber}@c.us`
+                simSimichat = chats.id._serialized;
+                setting.isEnableChat = isEnableChat;
                 setting.isSimSimi = isSimSimi;
                 setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
+                setting.mutedChat = mutedChat;
                 let hasil = JSON.stringify(setting, null, 2);
                 fs.writeFileSync("setting.json", hasil);
             } else if (msg.body === '!simsimi stop' && isSimSimi === true){
-                msg.reply("Mode SImSimi dimatikan!");
-                simSimichat = undefined;
+                msg.reply("Mode SimSimi dimatikan!");
+                simSimichat = "undefined";
                 isSimSimi = false;
+                setting.isEnableChat = isEnableChat;
                 setting.isSimSimi = isSimSimi;
+                setting.mutedChat = mutedChat;
                 setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
                 let hasil = JSON.stringify(setting, null, 2);
                 fs.writeFileSync("setting.json", hasil);
             } else {
-                let sender = `${yNumber}@c.us`
-                if (isSimSimi && simSimichat === sender) {
+                let sender = chats.id._serialized;
+                if (isSimSimi && simSimichat === sender && isNotMuted && isNotBan) {
                     let dict = msg.body;
                     axios.get(`https://beta.moe.team/api/simsimi/?apikey=tn7TbrGp4vzx2yQnMjkxu9W0f65Dr7h1x59w2vE06kuksoiMcOdWJcr4ud7QJ1Oj&q=${dict}`).then((res) => {
                         console.log("SimSimi chat!");
@@ -731,7 +955,32 @@ client.on('message_create', (msg) => {
         // do stuff here
     }
 });
-
+client.on('group_join', async notification => {
+    let bs = await client.getChatById(notification.id.remote);
+    let isAdmin = false;
+    async function isAsAdmin() {
+        for await (let participant of bs.groupMetadata.participants) {
+            let isAdmins = admin.includes(participant.id.user);
+            if (isAdmins) {
+               isAdmin = true;
+               break;
+            }
+        }
+    }
+    await isAsAdmin();
+    if (isAdmin === true) {
+        console.log("[INFO] Inviter is Admin");
+    }else{
+        bs.delete();
+        bs.leave();
+    }
+});
+client.on('group_leave', async notification => {
+    if (notification.author === `${client.info.me.user}@c.us`) {
+        let bs = await client.getChatById(notification.id.remote);
+        bs.delete();
+    }
+});
 client.on('message_revoke_everyone', async (after, before) => {
     // Fired whenever a message is deleted by anyone (including you)
     console.log(after); // message after it was deleted.
@@ -759,10 +1008,6 @@ client.on('message_ack', (msg, ack) => {
     if(ack == 3) {
         // The message was read
     }
-});
-client.on('group_update', (notification) => {
-    // Group picture, subject or description has been updated.
-    console.log('update', notification);
 });
 
 client.on('change_battery', (batteryInfo) => {

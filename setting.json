@@ -1,5 +1,10 @@
 {
-  "isEnableChat": false,
+  "isEnableChat": true,
   "isSimSimi": false,
-  "simSimichat": ""
+  "simSimichat": "undefined",
+  "mutedChat": [
+    "6281315554552@c.us",
+    "62895365364866-1576850154@g.us"
+  ],
+  "bannedList": []
 }
