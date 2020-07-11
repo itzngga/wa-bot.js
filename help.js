@@ -52,6 +52,11 @@ function helpPublic() {
     hasil += "unmute bot jika anda butuh\n\n";
     hasil += "~> *!arsip* :\n";
     hasil += "arsipkan chat agar privasi terjaga\n\n";
+    hasil += "~> *!kick [tag]* :\n";
+    hasil += "kick member dalam group, syarat :\n";
+    hasil += "1.BOT harus admin group\n";
+    hasil += "2.Pengirim harus admin group\n";
+    hasil += "_contoh_ : *!kick @Bambang*\n\n";
     hasil += "~> *!me* :\n";
     hasil += "bot menyapa anda\n\n";
     hasil += "~> *!location* :\n";
@@ -140,7 +145,7 @@ function helpMedia() {
     hasil += "~> *!surah [nomor surah]* :\n";
     hasil += "informasi surah dalam Al-Quran\n";
     hasil += "_contoh_ : *!surah 1*\n\n";
-    hasil += "~> *!surah [nomor surah] ayat [parameter]* :\n";
+    hasil += "~> *!surah [no surah] ayat [parameter]* :\n";
     hasil += "menampilkan ayat Al-Quran menurut nomor surah\n";
     hasil += "*Parameter* :\n";
     hasil += "*1*. 1 (ayat single)\n";

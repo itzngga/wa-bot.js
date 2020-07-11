@@ -2,6 +2,7 @@
   "isEnableChat": true,
   "isSimSimi": false,
   "simSimichat": "undefined",
+  "restartState": false,
   "mutedChat": [
     "6281315554552@c.us",
     "62895365364866-1576850154@g.us"

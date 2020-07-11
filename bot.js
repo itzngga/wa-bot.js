@@ -11,6 +11,7 @@ const help = require('./help.js');
 const google = require('google-it');
 const gTTs = require('gtts');
 const { isNullOrUndefined } = require('util');
+const { settings } = require('cluster');
 let Sadmin = "6281297980063";
 var datan = fs.readFileSync('./admin.json');
 var set = fs.readFileSync('./setting.json');
@@ -45,6 +46,7 @@ setInterval(() => {
       }
     })
   }, 30 * 1000)
+
 client.on('qr', (qr) => {
     console.log('QR RECEIVED', qr);
 });
@@ -65,7 +67,14 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('BOT READY TO GO'); 
+    if (setting.restartState) {
+        client.sendMessage(`${Sadmin}@c.us`, "Restart Succesfull!");
+        setting.restartState = false;
+        let bn = JSON.stringify(setting, null, 2);
+        fs.writeFileSync('setting.json', bn);
+    }
 });
+
 function curlyRemover(chat) {
     if (chat !== undefined){
         let sr = /{(.*?)}/g;
@@ -97,12 +106,13 @@ function filterWord(text) {
         return true;
     }
 }
-
 var isSimSimi = setting.isSimSimi;
 var simSimichat = setting.simSimichat;
 var isEnableChat = setting.isEnableChat;
 var mutedChat = setting.mutedChat;
 var bannedList = setting.bannedList;
+var admnGroup = [];
+
 client.on('message', async msg => {
     try {
         console.log("\x1b[32m"+'[INFO] MESSAGE RECEIVED --> '+`"${msg.body}"` + "\x1b[0m" + "\n");
@@ -110,6 +120,12 @@ client.on('message', async msg => {
         if (chats.isGroup) {
             const b = await msg.getContact();
             yNumber = b.id.user;
+            for(let members of chats.participants) {
+                if (members.isAdmin === true){
+                    let b = await client.getContactById(members.id._serialized);
+                    admnGroup.push(b.id.user);
+                }
+            }
         } else {
             const b = await msg.getContact();
             yNumber = b.id.user;
@@ -118,6 +134,7 @@ client.on('message', async msg => {
         let isSadmin = yNumber === Sadmin;
         let isMuted = mutedChat.includes(chats.id._serialized);
         let isNotBan = !bannedList.includes(yNumber);
+        let isGroupAdm = admnGroup.includes(yNumber);
         let isNotMuted = !isMuted;
         console.log("\x1b[35m"+"[CHECKING] SENDER IS_ADMIN : " + isSadmin + "\x1b[0m");
         
@@ -229,6 +246,18 @@ client.on('message', async msg => {
                   }).catch(e => {
                     msg.reply(e);
                   })
+            } else if (msg.body.startsWith('!kick ') && isGroupAdm){
+                try {
+                    if (chats.isGroup) {
+                        let dict = msg.body.split(" ")[1];
+                        if (dict.substr(0, 1) === "@") {
+                            dict = dict.replace(/@/g, "");
+                        }
+                        await chats.removeParticipants([`${dict}@c.us`]);
+                    }
+                } catch (error) {
+                    msg.reply("Bot bukan admin group, atau target tidak ada dalam group!");
+                }
             } else if (msg.body.startsWith('!mimic ')) {
                 // Replies with the same message
                 msg.reply(msg.body.slice(6));
@@ -265,12 +294,12 @@ client.on('message', async msg => {
                     let date = new Date(chat.createdAt);
                     date = date.toLocaleString();
                     msg.reply(`
----[Detail Group]---
+                    ---[Detail Group]---
 Nama: ${chat.name}
 Deskrpsi: ${chat.description}
 Dibuat pada: ${date}
 Dibuat oleh: ${chat.owner.user}
-Jumlah anggota: ${chat.participants.length}
+Jumlah anggota: ${chat.participants.length} Anggota
                     `);
                 } else {
                     msg.reply('This command can only be used in a group!');
@@ -281,12 +310,12 @@ Jumlah anggota: ${chat.participants.length}
             } else if (msg.body == '!info') {
                 let info = client.info;
                 client.sendMessage(msg.from, `
----[Informasi BOT]---
-Nama Bot: ${info.pushname}
-Creator: ${Sadmin}
-Nomor Bot: ${info.me.user}
-Platform: ${info.platform}
-WhatsApp version: ${info.phone.wa_version}
+                ---[Informasi BOT]---
+            Nama Bot: ${info.pushname}
+            Creator: ${Sadmin}
+            Nomor Bot: ${info.me.user}
+            Platform: ${info.platform}
+            WhatsApp version: ${info.phone.wa_version}
                 `);
             } else if (msg.body == '!nuked') {
                 let hasil = generate(6);
@@ -342,7 +371,7 @@ Has Media? ${quotedMsg.hasMedia}
                 } else {
                     msg.reply('I can only delete my own messages');
                 }
-            } else if (msg.body === '!arsip' && chkadmin) {
+            } else if (msg.body === '!arsip') {
                 const chat = await msg.getChat();
                 chat.archive();
                 msg.reply("Sekarang chat ini telah di arsipkan, pemilik bot tidak dapat melihat privasi anda");
@@ -478,7 +507,7 @@ Has Media? ${quotedMsg.hasMedia}
                 chat.sendMessage("[WW] Oke, peran werewolf sudah di berikan, hati2 dengan penyergapan mereka pada malam hari!");
                 let chance = 1;
                 gameLoop();
-                function gameLoop() {
+                async function gameLoop() {
                     if (chance < 6){
                         chat.sendMessage("[WW] Malam Telah Datang...");
                         client.sendMessage(`${noWW}@c.us`, "[WW] Silahkan pilih korban anda, dengan alias (batas waktu 15 detik!)");
@@ -574,6 +603,14 @@ Has Media? ${quotedMsg.hasMedia}
             } else if (msg.body == "@bot restart" && isSadmin){
                 console.log("[EVENT] Restarting...");
                 msg.reply("*[WARNING]* Restarting...");
+                setting.restartState = true;
+                setting.isEnableChat = isEnableChat;
+                setting.isSimSimi = isSimSimi;
+                setting.simSimichat = simSimichat;
+                setting.bannedList = bannedList;
+                setting.mutedChat = mutedChat;
+                let hs = JSON.stringify(setting, null, 2);
+                fs.writeFileSync('setting.json', hs);
                 pm2.restart("bot");
             } else if (msg.body.startsWith("!surah ")) {
                 const dict = msg.body.split(' ')[1];
@@ -657,7 +694,7 @@ ${ket}`);
                      }
                  })
                  msg.reply("Broadcast Succes!");
-            } else if (msg.body == '@bot getchats'){
+            } else if (msg.body == '@bot getchats' && isSadmin){
                 let chat = await client.getChats();
                 let hasil;
                 for (let val of chat){
@@ -939,7 +976,7 @@ ${ket}`);
                         msg.reply(err);
                     })
                 }else{
-                    client.sendSeen(msg.from);
+                    client.sendSeen(chats.id._serialized);
                 }
             }   
         }
