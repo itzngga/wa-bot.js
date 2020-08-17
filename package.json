@@ -1,0 +1,24 @@
+{
+    "name": "@viole/a-bot",
+    "version": "1.0.1",
+    "description": "Whatsapp Bot - sticker creator",
+    "main": "index.js",
+    "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+    },
+    "author": "Viole403",
+    "license": "MIT",
+    "dependencies": {
+        "@open-wa/wa-automate": "^1.9.105",
+        "mal-scraper": "^2.7.1",
+        "moment": "^2.27.0",
+        "node-fetch": "^2.6.0",
+        "tiktok-scraper": "^1.3.0",
+        "util": "^0.12.3",
+        "video-url-link": "git+https://github.com/Viole403/video-url-link"
+    },
+    "devDependencies": {
+        "twitter-lite": "^0.14.0"
+    }
+}
