@@ -11,6 +11,7 @@
 ![Node](https://img.shields.io/badge/node-14.6.0-brightgreen)
 ![WhatsApp_Web 2.2029.4](https://img.shields.io/badge/WhatsApp_Web-2.2029.4-brightgreen.svg)
 ![MIT License](https://img.shields.io/npm/l/license?color=brigtgreen&label=License)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FViole403%2FAzusaBot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FViole403%2FAzusaBot?ref=badge_shield)
 </div>
 
 ## Getting Started
@@ -109,6 +110,9 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 [MIT License](https://github.com/Viole403/expert-potato/blob/master/LICENSE)
 
 ©Viole403
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FViole403%2FAzusaBot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FViole403%2FAzusaBot?ref=badge_large)
 
 ## Legal
 
