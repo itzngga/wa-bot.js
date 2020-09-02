@@ -1,24 +1,44 @@
 {
-    "name": "@viole/a-bot",
+    "name": "xyz-bot",
     "version": "1.0.1",
     "description": "Whatsapp Bot - sticker creator",
     "main": "index.js",
     "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js"
     },
     "author": "Viole403",
     "license": "MIT",
     "dependencies": {
-        "@open-wa/wa-automate": "^1.9.105",
+        "@google-cloud/text-to-speech": "^3.1.0",
+        "@open-wa/wa-automate": "^2.0.0",
+        "axios": "^0.20.0",
+        "fluent-ffmpeg": "^2.1.2",
+        "google-it": "^1.5.0",
+        "gtts": "^0.2.1",
+        "jimp": "^0.16.0",
         "mal-scraper": "^2.7.1",
         "moment": "^2.27.0",
+        "node-cron": "^2.0.3",
         "node-fetch": "^2.6.0",
+        "node-gtts": "^2.0.2",
+        "pm2": "^4.4.1",
+        "striptags": "^3.1.1",
         "tiktok-scraper": "^1.3.0",
+        "translatte": "^2.5.8",
         "util": "^0.12.3",
-        "video-url-link": "git+https://github.com/Viole403/video-url-link"
+        "video-url-link": "git+https://github.com/YogaSakti/video-url-link.git",
+        "xml2js": "^0.4.23",
+        "ytdl-core": "^3.2.2"
     },
     "devDependencies": {
-        "twitter-lite": "^0.14.0"
+        "twitter-lite": "^0.14.0",
+        "babel-eslint": "^10.1.0",
+        "eslint": "^7.6.0",
+        "eslint-config-standard": "^14.1.1",
+        "eslint-plugin-import": "^2.22.0",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-promise": "^4.2.1",
+        "eslint-plugin-standard": "^4.0.1"
     }
 }
