@@ -9,12 +9,12 @@ pm2.connect((error) => {
   
     pm2.start({ script: 'index.js' }, (error, apps) => {
       pm2.disconnect() // Disconnects from PM2
-  
       if (error) {
         console.error(error)
         process.exit(2)
       }
     })
+
     cron.schedule("0 0 21 * * *", function(){
       let settings = JSON.parse(fs.readFileSync('./settings/setting.json'))
       settings.banChats = true
@@ -26,10 +26,11 @@ pm2.connect((error) => {
         }
       })
       console.log('[INFO] chat enabled');
-    });
+    })
+
     cron.schedule("0 0 0 * * *", function(){
       let obj = [{id: "6281297980063@c.us", limit: 1}];
-      fs.writeFileSync('./settings/limit.json', JSON.stringify(obj,null,2));
+      fs.writeFileSync('./settings/limit.json', JSON.stringify(obj));
       pm2.restart('index', (error) => {
         if (error) {
           console.error(error)
@@ -37,7 +38,7 @@ pm2.connect((error) => {
         }
       })
       console.log('[INFO] Limit restarted!');
-    });
+    })
 
     cron.schedule("0 0 9 * * *", function(){
       let settings = JSON.parse(fs.readFileSync('./settings/setting.json'))
@@ -50,12 +51,11 @@ pm2.connect((error) => {
         }
       })
       console.log('[INFO] chat enabled');
-    });
+    })
 
     setInterval(() => {
       pm2.describe('index', (error, scripts) => {
         const uptime = Date.now() - scripts[0].pm2_env.pm_uptime
-  
         if (uptime > 3600000) {
           console.log(`Restart after ${exitTimeout} minutes...`)
           pm2.restart('index', (error) => {

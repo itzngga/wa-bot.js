@@ -19,10 +19,10 @@ const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-
 let setting = JSON.parse(fs.readFileSync('./settings/setting.json'));
 let muted = JSON.parse(fs.readFileSync('./settings/muted.json'));
 let limit = JSON.parse(fs.readFileSync('./settings/limit.json'));
+let msgLimit = JSON.parse(fs.readFileSync('./settings/msgLimit.json'));
+let banned = JSON.parse(fs.readFileSync('./settings/banned.json'));
 const {help,license,donasi,bahasa,surah,sensor,help2,chromArgs,commandArray} = require('./settings/help.js');
-var {prefix, banChats} = setting
-var isRestart = setting.restartState
-var mtcState = setting.mtc
+var {prefix, banChats, restartState: isRestart,mtc: mtcState} = setting
 const sAdmin = setting.sAdmin
 const serverOption = {
     headless: true,
@@ -40,9 +40,10 @@ function restartAwal(client){
     client.sendText(setting.restartId, 'Restart Succesfull!')
     setting.restartId = 'undefined'
     fs.writeFileSync('./settings/setting.json', JSON.stringify(setting, null,2));
-    fs.writeFileSync('./settings/limit.json', JSON.stringify(limit, null,2));
+    fs.writeFileSync('./settings/limit.json', JSON.stringify(limit));
     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null,2));
-
+    fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(msgLimit));
+    fs.writeFileSync('./settings/banned.json', JSON.stringify(banned));
 }
 const opsys = process.platform;
 if (opsys === "win32" || opsys === "win64") {
@@ -50,7 +51,7 @@ if (opsys === "win32" || opsys === "win64") {
 } else if (opsys === "linux") {
     // serverOption['browserRevision'] = '737027';
     // serverOption['executablePath'] = '/usr/bin/chrome'
-    serverOption['executablePath'] = '/usr/bin/google-chrome';
+    serverOption['executablePath'] = '/usr/bin/google-chrome-stable';
 } else if (opsys === "darwin") {
     serverOption['executablePath'] = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 }
@@ -105,6 +106,11 @@ const startServer = async (from) => {
             }
             console.log(color('[INFO] Delete kicked from group'));
           });
+        cron.schedule('* * * * *', () =>  {
+        const obj = [{id: "6281297980063@c.us", msg: 1}]
+        msgLimit = obj
+        fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(obj))
+        });
         cron.schedule("0 55 20 * * *", async function(){
             const chats = await client.getAllChatIds()
             for(let xchat of chats){
@@ -124,13 +130,15 @@ const startServer = async (from) => {
         client.onIncomingCall(async (call) => {
             await client.sendText(call.peerJid, 'Maaf ya, Telp = Blok\ndan tidak akan bisa UNBLOK!');
             await client.contactBlock(call.peerJid);
-            await client.deleteChat(call.peerJid)
+            banned.push(call.peerJid)
+            fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
         })
         //WHEN BOT IS ADDED TO A GROUP
         client.onAddedToGroup(async (chat) => {
+            const groups = await client.getAllGroups()
             if(mtcState === false){
-                if(chat.groupMetadata.participants.length < 25){
-                    await client.sendText(chat.id, 'Maaf, BOT keluar jika member group tidak melebihi 25 orang').then(async () =>{
+                if(groups.length > 20){
+                    await client.sendText(chat.id, 'Maaf, Jumlah group bot sudah penuh').then(async () =>{
                         await client.leaveGroup(chat.id).catch(async (err) =>{
                             if(err){
                                 await client.sendText(sAdmin,err)
@@ -139,7 +147,17 @@ const startServer = async (from) => {
                         await client.deleteChat(chat.id)
                     })
                 }else{
-                    if(!chat.isReadOnly)client.sendText(chat.id, 'Halo semuanya, saya adalah xYz BOT. gunakan '+prefix+'help untuk menggunakan saya :D')
+                    if(chat.groupMetadata.participants.length < 25){
+                        await client.sendText(chat.id, 'Maaf, BOT keluar jika member group tidak melebihi 25 orang').then(async () =>{
+                            await client.leaveGroup(chat.id).catch(async (err) =>{
+                                if(err){
+                                    await client.sendText(sAdmin,err)
+                                }
+                            })
+                        })
+                    }else{
+                        if(!chat.isReadOnly)client.sendText(chat.id, 'Halo semuanya, saya adalah xYz BOT. gunakan '+prefix+'help untuk menggunakan saya :D')
+                    }
                 }
             }else{
                 await client.sendText(chat.id, 'Bot sedang maintenance, coba lain hari')
@@ -148,7 +166,6 @@ const startServer = async (from) => {
                         await client.sendText(sAdmin,err)
                     }
                 })
-                await client.deleteChat(chat.id)
             }
             
         })
@@ -158,6 +175,7 @@ const startServer = async (from) => {
                 const { type, body, id, from, t, sender, isGroupMsg, chat, chatId, caption, isMedia, mimetype, quotedMsg } = message
                 if (body == undefined) return
                 const serial = sender.id
+                
                 const isSadmin = serial === sAdmin
                 let { pushname, verifiedName } = sender
                 pushname = pushname || verifiedName
@@ -167,6 +185,7 @@ const startServer = async (from) => {
                 const groupAdmins = isGroupMsg ? await client.getGroupAdmins(groupId) : ''
                 const groupMembers = isGroupMsg ? await client.getGroupMembersId(groupId) : ''
                 const isGroupAdmins = isGroupMsg ? groupAdmins.includes(sender.id) : false
+                const isBanned = banned.includes(chatId)
                 const isBotGroupAdmins = isGroupMsg ? groupAdmins.includes(botNumber + '@c.us') : false
                 const commands = commandArray
                 const cmds = commands.map(x => x + '\\b').join('|')
@@ -178,44 +197,84 @@ const startServer = async (from) => {
                     client.reply(chatId, message, id, true)
                 }
                 // BEGIN HELPER FUNCTION
-                function isLimit(id){
-                    if (isSadmin) {return false;}
-                        let found = false;
-                        for (let i of limit){
-                            if(i.id === id){
-                                let limits = i.limit;
-                                if (limits > 49) {
-                                    found = true;
-                                    reply('Perintah BOT anda sudah mencapai batas, coba esok hari :)')
-                                    return true;
-                                }else{
-                                    found = true;
-                                    return false;
-                                }
-                            }
-                        }
-                        if (found === false){
-                            let obj = {id: `${id}`, limit:1};
-                            limit.push(obj);
-                            fs.writeFileSync('./settings/limit.json',JSON.stringify(limit,null, 2));
-                            return false;
+                function isMsgLimit(id){
+                    // if (isSadmin) {return false;}
+                    let found = false;
+                    for (let i of msgLimit){
+                        if(i.id === id){
+                            if (i.msg >= 12) {
+                                found === true
+                                reply('*[ANTI-SPAM]*\nMaaf, akun anda kami blok karena SPAM, dan tidak bisa di UNBLOK!')
+                                client.contactBlock(id)
+                                banned.push(id)
+                                fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
+                                return true;
+                            }else if(i.msg >= 7){
+                                found === true
+                                reply('*[ANTI-SPAM]*\nNomor anda terdeteksi spam!\nMohon tidak spam 5 pesan lagi atau nomor anda AUTO BLOK!')
+                                return true
+                            }else{
+                                found === true
+                                return false;
+                            }   
                         }
                     }
+                    if (found === false){
+                        let obj = {id: `${id}`, msg:1};
+                        msgLimit.push(obj);
+                        fs.writeFileSync('./settings/msgLimit.json',JSON.stringify(msgLimit));
+                        return false;
+                    }  
+                }
+                function addMsgLimit(id){
+                    // if (isSadmin) {return;}
+                    var found = false
+                    Object.keys(msgLimit).forEach((i) => {
+                        if(msgLimit[i].id == id){
+                            found = i
+                        }
+                    })
+                    if (found !== false) {
+                        msgLimit[found].msg += 1;
+                        fs.writeFileSync('./settings/msgLimit.json',JSON.stringify(msgLimit));
+                    }
+                    
+                }
+                function isLimit(id){
+                    if (isSadmin) {return false;}
+                    let found = false;
+                    for (let i of limit){
+                        if(i.id === id){
+                            let limits = i.limit;
+                            if (limits > 49) {
+                                found = true;
+                                reply('Perintah BOT anda sudah mencapai batas, coba esok hari :)')
+                                return true;
+                            }else{
+                                limit
+                                found = true;
+                                return false;
+                            }
+                        }
+                    }
+                    if (found === false){
+                        let obj = {id: `${id}`, limit:1};
+                        limit.push(obj);
+                        fs.writeFileSync('./settings/limit.json',JSON.stringify(limit));
+                        return false;
+                    }  
+                }
                 function limitAdd (id) {
                     if (isSadmin) {return;}
                     var found = false;
-                    Object.keys(limit).forEach(function (i) {
-                        if(limit[i].id === id){
-                            found = i;
+                    Object.keys(limit).forEach((i) => {
+                        if(limit[i].id == id){
+                            found = i
                         }
-                    });
+                    })
                     if (found !== false) {
                         limit[found].limit += 1;
-                        fs.writeFileSync('./settings/limit.json',JSON.stringify(limit,null, 2));
-                    }else{
-                        let obj = {id: `${id}`, limit:1};
-                        limit.push(obj);
-                        fs.writeFileSync('./settings/limit.json',JSON.stringify(limit,null, 2));
+                        fs.writeFileSync('./settings/limit.json',JSON.stringify(limit));
                     }
                 }
                 const msgs = (message) => {
@@ -228,18 +287,28 @@ const startServer = async (from) => {
                 }
                 // END HELPER FUNCTION
                 if(body === prefix+'mute' && isMuted(chatId) == true){
+                    if(isMsgLimit(serial)){
+                        return
+                    }else{
+                        addMsgLimit(serial)
+                    }
                     muted.push(chatId)
                     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null, 2))
                     reply(`Bot telah di mute pada chat ini! ${prefix}unmute untuk unmute!`)
                 }
                 if(body === prefix+'unmute' && isMuted(chatId) == false){
+                    if(isMsgLimit(serial)){
+                        return
+                    }else{
+                        addMsgLimit(serial)
+                    }
                     let index = muted.indexOf(chatId);
                     muted.splice(index,1)
                     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null, 2))
                     reply(`Bot telah di unmute!`)
                 }
                 
-                if (isMuted(chatId) && !mtcState && banChat() || isSadmin ) {
+                if (isMuted(chatId) && !mtcState && banChat() && !isBanned || isSadmin ) {
                     const args = body.trim().split(' ')
                     if(!isSadmin){
                         if(args[1] !== undefined && args[1].match(new RegExp(`\\[`, 'gi')) && args[1].match(new RegExp(`]`, 'gi'))) return await client.sendText(from,'perintah tidak boleh pakai []!')
@@ -260,6 +329,11 @@ const startServer = async (from) => {
                     }
                     if(body == prefix+'sticker' || body == prefix+'stiker' || caption == prefix+'sticker' || caption == prefix+'stiker'){
                         if(isLimit(serial)) return
+                        if(isMsgLimit(serial)){
+                            return
+                        }else{
+                            addMsgLimit(serial)
+                        }
                         if (isMedia) {
                             const mediaData = await decryptMedia(message, uaOverride)
                             const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
@@ -287,6 +361,11 @@ const startServer = async (from) => {
                         }
                     }
                         if (cmd) {
+                            if(isMsgLimit(serial)){
+                                return
+                            }else{
+                                addMsgLimit(serial)
+                            }
                             switch (cmd[0]) {
                             case prefix+'menu':
                             case prefix+'help':
@@ -303,17 +382,22 @@ const startServer = async (from) => {
                                 break
                             case prefix+'join':
                                 if(isLimit(serial) && !args.length <= 2) return
-                                const log = await client.inviteInfo(args[1])
-                                if(log.size < 25 && !isSadmin) {
-                                    return client.sendText(from, '[GAGAL] Group target tidak memiliki member melebihi 25')
+                                let group = await client.getAllGroups()
+                                if(group.length > 20){
+                                    return client.sendText(from, 'Maaf, Jumlah group bot sudah penuh')
                                 }else{
-                                    try {
-                                        await client.joinGroupViaLink(args[1]).then(async () => {
-                                            await client.sendText(from, 'Berhasil join ke group via link!')
-                                            limitAdd(serial)
-                                        })
-                                    } catch (error) {
-                                        return client.sendText(from, 'Link group tidak valid!')
+                                    const log = await client.inviteInfo(args[1])
+                                    if(log.size < 25 && !isSadmin) {
+                                        return client.sendText(from, '[GAGAL] Group target tidak memiliki member melebihi 25')
+                                    }else{
+                                        try {
+                                            await client.joinGroupViaLink(args[1]).then(async () => {
+                                                await client.sendText(from, 'Berhasil join ke group via link!')
+                                                limitAdd(serial)
+                                            })
+                                        } catch (error) {
+                                            return client.sendText(from, 'Link group tidak valid!')
+                                        }
                                     }
                                 }
                                 break
@@ -453,6 +537,19 @@ const startServer = async (from) => {
                                     browser.close();
                                     });
                             break
+                            case prefix+'ban':
+                                if(!isSadmin) return
+                                banned.push(args[1])
+                                fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
+                                client.sendText(from, 'Succes ban target!')
+                                break
+                            case prefix+'unban':
+                                if(!isSadmin) return
+                                let inx = banned.indexOf(args[1])
+                                banned.splice(inx,1)
+                                fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
+                                client.sendText(from, 'Succes unban target!')
+                                break
                             case prefix+'gtts':
                                 if(args[0] == undefined || args[1] == undefined) return
                                 let gttsText = body.slice(6);
@@ -582,7 +679,11 @@ const startServer = async (from) => {
                                     client.sendText(from, '*[WARN]* Restarting ...')
                                     setting.restartState = true
                                     setting.restartId = chatId
-                                    fs.writeFileSync('./settings/setting.json', JSON.stringify(setting, null, 2))
+                                    fs.writeFileSync('./settings/setting.json', JSON.stringify(setting, null,2));
+                                    fs.writeFileSync('./settings/limit.json', JSON.stringify(limit));
+                                    fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null,2));
+                                    fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(msgLimit));
+                                    fs.writeFileSync('./settings/banned.json', JSON.stringify(banned));
                                     const spawn = require('child_process').exec;
                                     function os_func() {
                                         this.execCommand = function (cmd) {
@@ -682,9 +783,10 @@ const startServer = async (from) => {
                                 break
                             case '#bot clearall':
                                 if(!isSadmin) return
+                                const groupCount = await client.getAllChatIds()
                                 const lkist = await client.getAllGroups()
                                 for(let gcList of lkist){
-                                    await client.sendText(gcList.contact.id,'Maaf, sedang ada pembersihan group harian').then(async () => {
+                                    await client.sendText(gcList.contact.id,`Maaf, bot overload dan tercatat ${groupCount.length} chat aktif`).then(async () => {
                                     await client.leaveGroup(gcList.contact.id).catch((err) =>{
                                         if(err){
                                             client.sendText(gcList.contact.id, err)
@@ -692,8 +794,7 @@ const startServer = async (from) => {
                                     })
                                 })
                                 }
-                                const chats = await client.getAllChatIds()
-                                for(let xchat of chats){
+                                for(let xchat of groupCount){
                                     await client.deleteChat(xchat)
                                 }
                                 client.sendText(from, 'sukses!')
@@ -1068,6 +1169,11 @@ const startServer = async (from) => {
                     }
                     if(caption == undefined) return
                     if(caption == prefix+'compress' && isMedia){
+                        if(isMsgLimit(serial)){
+                            return
+                        }else{
+                            addMsgLimit(serial)
+                        }
                         if (isLimit(serial)) return
                         const gambar = await decryptMedia(message, uaOverride)
                         async function processImg() {
@@ -1081,6 +1187,11 @@ const startServer = async (from) => {
                             await processImg();
                     }
                     if(caption == prefix+'wait' && isMedia){
+                        if(isMsgLimit(serial)){
+                            return
+                        }else{
+                            addMsgLimit(serial)
+                        }
                         if(isLimit(serial)) return
                         const fetch = require('node-fetch');
                         const mediaData = await decryptMedia(message, uaOverride)
