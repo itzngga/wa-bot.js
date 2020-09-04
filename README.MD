@@ -9,9 +9,6 @@
 > npm i
 > npm i -g pm2
 ```
-add folder named :
-* audio
-* quote
 ## Usage
 
 ```bash
