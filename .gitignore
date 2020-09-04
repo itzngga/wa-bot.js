@@ -6,6 +6,7 @@ Imperial.data*
 *.code-workspace
 test.js
 *todo
+*.mp3
 
 # Logs
 logs
@@ -111,3 +112,5 @@ dist
 
 # TernJS port file
 .tern-port
+quote/compressed.jpeg
+quote/quoteIt.jpeg

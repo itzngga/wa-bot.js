@@ -9,7 +9,9 @@
 > npm i
 > npm i -g pm2
 ```
-
+add folder named :
+* audio
+* quote
 ## Usage
 
 ```bash
@@ -64,8 +66,7 @@ https://wa.me/6281297980063
 
 ## Donation
 
-[SAWERIA][saweria] https://saweria.co/ItzNgga
-[saweria]: https://saweria.co/ItzNgga
+[SAWERIA](https://saweria.co/ItzNgga)
 
 ## Legal
 
@@ -73,5 +74,4 @@ WhatsApp are not allowing user using External Automation, USE AT YOUR OWN RISK
 
 ## License
 
-[MIT][license] /LICENSE
-[license]: /LICENSE
+[MIT](/LICENSE)

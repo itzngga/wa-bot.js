@@ -166,7 +166,7 @@ exports.license = license()
 function donate (){
     return `jika bot ini dirasa bermanfaat 
 marilah berdonasi agar bot bisa terus
-aktif dan update.\n\nSAWERIA: saweria.co/donate/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\n\nwa.me/6281297980063
+aktif dan update.\n\nSAWERIA: https://saweria.co/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\n\nwa.me/6281297980063
     `
 }
 exports.donasi = donate()
