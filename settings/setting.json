@@ -2,7 +2,7 @@
   "sAdmin": "6281297980063@c.us",
   "restartState": false,
   "restartId": "undefined",
-  "banChats": true,
+  "banChats": false,
   "prefix": "!",
   "mtc": false,
   "banChat": false

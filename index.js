@@ -1,10 +1,10 @@
 const { create, decryptMedia } = require('@open-wa/wa-automate')
 const fs = require('fs')
 const moment = require('moment')
-const { isNullOrUndefined } = require('util');
+const { isNullOrUndefined, isArray } = require('util');
 const malScraper = require('mal-scraper')
 const urlShortener = require('./lib/shortener')
-const color = require('./lib/color')
+const color = require('./lib/color.js')
 const gTTs = require('gtts');
 const axios = require('axios')
 const puppeteer = require('puppeteer')
@@ -95,6 +95,10 @@ function filterWord(text) {
         return true;
     }
 }
+const capitalize = (str) => {
+    if (typeof str !== 'string') return ''
+    return str.charAt(0).toUpperCase() + str.slice(1)
+}
 // END HELPER FUNCTION
 const startServer = async (from) => {
     create('Imperial', serverOption)
@@ -104,7 +108,7 @@ const startServer = async (from) => {
             for(let group of groupList){
                 await client.deleteChat(group.contact.id)
             }
-            console.log(color('[INFO] Delete kicked from group'));
+            console.log('~>',color('[INFO] Delete kicked from group'));
           });
         cron.schedule('* * * * *', () =>  {
         const obj = [{id: "6281297980063@c.us", msg: 1}]
@@ -116,14 +120,14 @@ const startServer = async (from) => {
             for(let xchat of chats){
                 await client.deleteChat(xchat)
             }
-        console.log(color('[INFO] Deleted all chats'));
+        console.log(color.green('~> [INFO] Deleted all chats'));
         });
-        console.log('[DEV] ItzNgga BOT!')
-        console.log('[SERVER] Server Started!')
+        console.log('~>',color('[DEV] ItzNgga BOT!'))
+        console.log('~>',color('[SERVER] Server Started!'))
         //CALLING the #bot restart function
         if(isRestart){restartAwal(client);}
         client.onStateChanged(state => {
-            console.log('[State Changed]', state)
+            console.log('~>',color('[State Changed]'), color(state))
             if (state === 'CONFLICT') client.forceRefocus()
         })
         //BLOCK CONTACT WHILE TARGET CALLING BOT
@@ -137,7 +141,7 @@ const startServer = async (from) => {
         client.onAddedToGroup(async (chat) => {
             const groups = await client.getAllGroups()
             if(mtcState === false){
-                if(groups.length > 20){
+                if(groups.length > 25){
                     await client.sendText(chat.id, 'Maaf, Jumlah group bot sudah penuh').then(async () =>{
                         await client.leaveGroup(chat.id).catch(async (err) =>{
                             if(err){
@@ -190,7 +194,7 @@ const startServer = async (from) => {
                 const commands = commandArray
                 const cmds = commands.map(x => x + '\\b').join('|')
                 const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'gi')) : type === 'image' && caption ? caption : ''
-                const time = moment(t * 1000).format('DD/MM HH:mm:ss')
+                const time = moment(t * 1000).format('HH:mm:ss')
                 const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi);
                 const uaOverride = "WhatsApp/2.2029.4 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
                 const reply = (message) => {
@@ -311,7 +315,8 @@ const startServer = async (from) => {
                 if (isMuted(chatId) && !mtcState && banChat() && !isBanned || isSadmin ) {
                     const args = body.trim().split(' ')
                     if(!isSadmin){
-                        if(args[1] !== undefined && args[1].match(new RegExp(`\\[`, 'gi')) && args[1].match(new RegExp(`]`, 'gi'))) return await client.sendText(from,'perintah tidak boleh pakai []!')
+                        const argsList = args.join(" ")
+                        if(argsList !== undefined && argsList.match(new RegExp(`\\[`, 'gi')) && argsList.match(new RegExp(`]`, 'gi'))) return await client.sendText(from,'perintah tidak boleh pakai []!')
                     }
                     if(body == prefix+'help 2'){
                         client.sendText(from, help2)
@@ -328,12 +333,6 @@ const startServer = async (from) => {
                         }
                     }
                     if(body == prefix+'sticker' || body == prefix+'stiker' || caption == prefix+'sticker' || caption == prefix+'stiker'){
-                        if(isLimit(serial)) return
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
                         if (isMedia) {
                             const mediaData = await decryptMedia(message, uaOverride)
                             const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
@@ -354,7 +353,7 @@ const startServer = async (from) => {
                             } else {
                                 client.sendText(from, 'Maaf, link yang kamu kirim tidak valid.')
                             }
-                        } else if(type == 'VIDEO' || quotedMsg.type == 'VIDEO'){
+                        } else if(type == 'video' || quotedMsg.type == 'video'){
                             client.sendText(from, 'Video tidak bisa di jadikan sticker!')
                         } else {
                             client.sendText(from, `Tidak ada gambar! Untuk membuat sticker kirim gambar dengan caption ${prefix}stiker`)
@@ -382,30 +381,41 @@ const startServer = async (from) => {
                                 break
                             case prefix+'join':
                                 if(isLimit(serial) && !args.length <= 2) return
+                                if(isSadmin){
+                                    await client.joinGroupViaLink(args[1]).then(async () => {
+                                        await client.sendText(from, 'Berhasil join ke group via link!')
+                                        limitAdd(serial)
+                                    }).catch(err => {
+                                        return client.sendText(from, 'Link group tidak valid!')
+                                    })
+                                }
                                 let group = await client.getAllGroups()
-                                if(group.length > 20){
+                                if(group.length > 25){
                                     return client.sendText(from, 'Maaf, Jumlah group bot sudah penuh')
                                 }else{
                                     const log = await client.inviteInfo(args[1])
                                     if(log.size < 25 && !isSadmin) {
                                         return client.sendText(from, '[GAGAL] Group target tidak memiliki member melebihi 25')
                                     }else{
-                                        try {
-                                            await client.joinGroupViaLink(args[1]).then(async () => {
-                                                await client.sendText(from, 'Berhasil join ke group via link!')
-                                                limitAdd(serial)
-                                            })
-                                        } catch (error) {
+                                        await client.joinGroupViaLink(args[1]).then(async () => {
+                                            await client.sendText(from, 'Berhasil join ke group via link!')
+                                            limitAdd(serial)
+                                        }).catch(err => {
                                             return client.sendText(from, 'Link group tidak valid!')
-                                        }
+                                        })
                                     }
                                 }
                                 break
                             case prefix+'bug report':
                                 const bug = body.slice(12)
                                 if(bug == undefined || bug == ' ') return
-                                client.sendText(sAdmin, `*[BUG REPORT]*\nNO PENGIRIM : wa.me/${serial.match(/\d+/g)}\n\n${bug}`)
-                                reply('Masalah telah di laporkan ke owner BOT, laporan palsu/main2 tidak akan ditanggapi.')
+                                if(isGroupMsg){
+                                    client.sendText(sAdmin, `*[BUG REPORT]*\nNO PENGIRIM : wa.me/${serial.match(/\d+/g)}\nGroup : ${formattedTitle}\n\n${bug}`)
+                                    reply('Masalah telah di laporkan ke owner BOT, laporan palsu/main2 tidak akan ditanggapi.')
+                                }else{
+                                    client.sendText(sAdmin, `*[BUG REPORT]*\nNO PENGIRIM : wa.me/${serial.match(/\d+/g)}\n\n${bug}`)
+                                    reply('Masalah telah di laporkan ke owner BOT, laporan palsu/main2 tidak akan ditanggapi.')
+                                }
                                 break
                             case '#bot unblock':
                                 if(!isSadmin) return
@@ -456,21 +466,61 @@ const startServer = async (from) => {
                                 })
                                 limitAdd(serial)
                                 break
+                            case prefix+'qnime':
+                                if(isLimit(serial)) return
+                                if(args[1]){
+                                    if(args[1] === 'anime'){
+                                        const anime = body.slice(13)
+                                        axios.get('https://animechanapi.xyz/api/quotes?anime='+anime).then(({ data }) => {
+                                            let quote = data.data[0].quote 
+                                            let char = data.data[0].character
+                                            let anime = data.data[0].anime
+                                            client.sendText(from, `"${quote}"\n\n${char} from ${anime}`)
+                                            limitAdd(serial)
+                                        }).catch(err => {
+                                            client.sendText('Quote Char/Anime tidak ditemukan!')
+                                        })
+                                    }else{
+                                        const char = body.slice(12)
+                                        axios.get('https://animechanapi.xyz/api/quotes?char='+char).then(({ data }) => {
+                                            let quote = data.data[0].quote 
+                                            let char = data.data[0].character
+                                            let anime = data.data[0].anime
+                                            client.sendText(from, `"${quote}"\n\n${char} from ${anime}`)
+                                            limitAdd(serial)
+                                        }).catch(err => {
+                                            client.sendText('Quote Char/Anime tidak ditemukan!')
+                                        })
+                                    }
+                                }else{
+                                    axios.get('https://animechanapi.xyz/api/quotes/random').then(({ data }) => {
+                                        let quote = data.data[0].quote 
+                                        let char = data.data[0].character
+                                        let anime = data.data[0].anime
+                                        client.sendText(from, `"${quote}"\n\n${char} from ${anime}`)
+                                        limitAdd(serial)
+                                    }).catch(err => {
+                                        console.log(err)
+                                    })
+                                }
+                            break
                             case prefix+'1cak':
-                                client.sendText(from,'Sedang overload, coba lagi besok :)')
-                                // if(isLimit(serial)) return
-                                // axios.get(`https://beta.moe.team/api/1cak/?apikey=McJNTmAfdBmO1hYk7gREmVBmtrxiywJtqN3uI7ZRNlMK7MiMwLVUVUQUzAtt6qrv`).then((res) => {
-                                //     let title = res.data.result.title
-                                //     let url = res.data.result.image
-                                //     client.sendFileFromUrl(from,url, 'image.jpg', title)
-                                //     limitAdd(serial)
-                                // })
+                                return client.sendText(from,'Sedang overload, coba lagi besok :)')
+                                if(isLimit(serial)) return
+                                axios.get(`https://rest.farzain.com/api/1cak.php?apikey=3Ot5wNlKgSNK0MFVR0MEILiEq`).then((res) => {
+                                    let title = res.data.title
+                                    let url = res.data.img
+                                    console.log(url)
+                                    client.sendFileFromUrl(from,url, 'image.jpg', title)
+                                    limitAdd(serial)
+                                })
                                 break
                             case prefix+'speed':
                             case prefix+'ping':
-                                const timestamp = moment();
-                                const latensi = moment.duration(moment() - timestamp).asSeconds();
-                                client.sendText(from, `${latensi} detik`)
+                                var now = require("performance-now")
+                                const timestamp = now();
+                                const latensi = now() - timestamp
+                                client.sendText(from, `${latensi.toFixed(5)} detik`)
                             break
                             case prefix+'qrcode':
                                 if(isLimit(serial)) return
@@ -573,7 +623,6 @@ const startServer = async (from) => {
                                 })
                                 break
                             case prefix+'cekresi':
-                                return reply('Website penyedia layanan sedang Maintenance :D')
                                 if(isLimit(serial)) return
                                 if(!args.lenght >= 3 ) return
                                 let kurir = args[2];
@@ -581,7 +630,18 @@ const startServer = async (from) => {
                                 let courir = ['jne', 'pos', 'jnt', 'sicepat', 'tiki', 'anteraja', 'wahana', 'ninja', 'lion', 'lek'];
                                 let chkKurir = courir.includes(kurir.toLowerCase());
                                 if (chkKurir === true) {
-                                    axios.get(`https://api.binderbyte.com/cekresi?awb=${resi}&api_key=613365e93ec2e9891024176f1b7ee60d3714256b27b1c43dbc82518383323d3c&courier=${kurir}`).then((res) => {
+                                    const apikeys = () => {
+                                        const ran = Math.floor(Math.random() * 3);
+                                        switch (ran) {
+                                            case 0:
+                                                return '613365e93ec2e9891024176f1b7ee60d3714256b27b1c43dbc82518383323d3c'
+                                            case 1:
+                                                return '4830e97d5f6e9122e71fde868b33ef79963203187ec608c2a1742517fa1a9424'
+                                            case 2:
+                                                return 'e84bd4628941e71d9074c3c233dc76cbcbdb8cceb9ae6aebbc1e163599af006f'
+                                        }
+                                    }
+                                    axios.get(`https://api.binderbyte.com/cekresi?awb=${resi}&api_key=${apikeys()}&courier=${kurir}`).then((res) => {
                                         if (res.data.result === true) {
                                             client.sendText(from,'Tunggu sebentar ya kaka :D')
                                             let bn = res.data.data;
@@ -1087,24 +1147,41 @@ const startServer = async (from) => {
                             break
                             case prefix+'corona':
                                 if(isLimit(serial)) return
-                                axios.all([
-                                    axios.get('https://covid19.mathdro.id/api'),
-                                    axios.get('https://covid19.mathdro.id/api/countries/id')
-                                ]).then((res) => {
-                                    var hasil = res[0].data;
-                                    var id = res[1].data;
-                                    function intl(str) {
-                                        var nf = Intl.NumberFormat();
-                                        return nf.format(str);
+                                function intl(str) {
+                                    var nf = Intl.NumberFormat();
+                                    return nf.format(str);
+                                }
+                                if(args[1]){
+                                    if(args[1] === 'prov'){
+                                        const province = body.slice(13).toLowerCase()
+                                        axios.get('https://indonesia-covid-19.mathdro.id/api/provinsi/').then(({data}) => {
+                                            var founded = false
+                                            data.data.find(i => {
+                                                if(i.provinsi.toLowerCase() == province){
+                                                    founded = true
+                                                    client.sendText(from, `╭──[ Kasus di ${i.provinsi}]───\n├ Positif : ${intl(i.kasusPosi)} Kasus\n├ Sembuh : ${intl(i.kasusSemb)} Kasus\n├ Meninggal : ${intl(i.kasusMeni)} Kasus\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ xYz WhatsApp Bot ]───`)
+                                                    limitAdd(serial)
+                                                }
+                                            })
+                                            if(founded == false) return client.sendText(from, `Provinsi ${province} tidak valid, gunakan format formal seperti : DKI Jakarta`)
+                                        })
                                     }
-                                    var date = new Date(id.lastUpdate);
-                                    date = moment(date).fromNow();
-                                    translatte(date, {to: 'id'}).then(res => {
-                                        date = res.text
-                                        client.sendText(from, `╭──[ Kasus Covid19 di Dunia]───\n├ Positif : ${intl(hasil.confirmed.value)} Kasus\n├ Sembuh : ${intl(hasil.recovered.value)} Kasus\n├ Meninggal : ${intl(hasil.deaths.value)} Kasus\n├──[ Kasus Covid19 di Indonesia]───\n├ Positif : ${intl(id.confirmed.value)} Kasus \n├ Sembuh : ${intl(id.recovered.value)} Kasus \n├ Meninggal : ${intl(id.deaths.value)} Kasus\n├ Update Terakhir : ${date}\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ xYz WhatsApp Bot ]───`)
-                                        limitAdd(serial)
+                                }else{
+                                    axios.all([
+                                        axios.get('https://covid19.mathdro.id/api'),
+                                        axios.get('https://covid19.mathdro.id/api/countries/id')
+                                    ]).then((res) => {
+                                        var hasil = res[0].data;
+                                        var id = res[1].data;
+                                        var date = new Date(id.lastUpdate);
+                                        date = moment(date).fromNow();
+                                        translatte(date, {to: 'id'}).then(res => {
+                                            date = res.text
+                                            client.sendText(from, `╭──[ Kasus Covid19 di Dunia]───\n├ Positif : ${intl(hasil.confirmed.value)} Kasus\n├ Sembuh : ${intl(hasil.recovered.value)} Kasus\n├ Meninggal : ${intl(hasil.deaths.value)} Kasus\n├──[ Kasus Covid19 di Indonesia]───\n├ Positif : ${intl(id.confirmed.value)} Kasus \n├ Sembuh : ${intl(id.recovered.value)} Kasus \n├ Meninggal : ${intl(id.deaths.value)} Kasus\n├ Update Terakhir : ${date}\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ xYz WhatsApp Bot ]───`)
+                                            limitAdd(serial)
+                                        })
                                     })
-                                })
+                                }
                                 break
                             case prefix+'anime':
                             if(isLimit(serial)) return
@@ -1161,19 +1238,14 @@ const startServer = async (from) => {
                                     await processImgs();
                             break
                         }
-                        if (!isGroupMsg) console.log(color('[EXEC]'), color(time, 'yellow'), color(msgs(cmd[0])), 'from', color(pushname))
-                        if (isGroupMsg) console.log(color('[EXEC]'), color(time, 'yellow'), color(msgs(cmd[0])), 'from', color(pushname), 'in', color(formattedTitle))
+                        if (!isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd[0])), 'from', color(pushname))
+                        if (isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd[0])), 'from', color(pushname), 'in', color(formattedTitle))
                     } else {
-                        if (!isGroupMsg) console.log(color('[MSG]'), color(time, 'yellow'), color(msgs(body))+' from', color(pushname))
-                        if (isGroupMsg) console.log(color('[MSG]'), color(time, 'yellow'), color(msgs(body))+' from', color(pushname), 'in', color(formattedTitle))
+                        if (!isGroupMsg) console.log('~>',color('[MSG]', 'yellow'), time, color(msgs(body))+' from', color(pushname))
+                        if (isGroupMsg) console.log('~>',color('[MSG]', 'yellow'), time, color(msgs(body))+' from', color(pushname), 'in', color(formattedTitle))
                     }
                     if(caption == undefined) return
                     if(caption == prefix+'compress' && isMedia){
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
                         if (isLimit(serial)) return
                         const gambar = await decryptMedia(message, uaOverride)
                         async function processImg() {
@@ -1187,11 +1259,6 @@ const startServer = async (from) => {
                             await processImg();
                     }
                     if(caption == prefix+'wait' && isMedia){
-                        if(isMsgLimit(serial)){
-                            return
-                        }else{
-                            addMsgLimit(serial)
-                        }
                         if(isLimit(serial)) return
                         const fetch = require('node-fetch');
                         const mediaData = await decryptMedia(message, uaOverride)

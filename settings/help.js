@@ -69,7 +69,9 @@ random quote bahasa indonesia\n
 ~> *${prefix}quran* : 
 ayat random alquran\n
 ~> *${prefix}corona* :
-kondisi pandemi terkini dunia,dan indonesia
+kondisi pandemi terkini dunia,dan indonesia\n
+~> *${prefix}corona prov [nama provinsi]* :
+kondisi pandemi bedasarkan provinsi\n
 -------------------------------------------------------------------
 perintah halaman 2 ~> *${prefix}help 2*`
     return hasil;
@@ -105,7 +107,7 @@ _*[WARNING]*_
 -------------------------------------------------------------------
 ~> *${prefix}leave* :
 keluar dari group ini\n
-> *${prefix}google [url]* :
+~> *${prefix}google [url]* :
 mencari google pada hasil pertama\n
 ~> *${prefix}bmkg* :
 informasi gempa > 5.1sr terbaru\n
@@ -139,8 +141,14 @@ what anime is this (kirim gambar dengan caption)\n
 kirim gambar random walppaper\n
 ~> *${prefix}join [link group]* :
 join ke group dengan link\n
-~> *${prefix}comprefixss* :
-komprefixss gambar yang anda kirimkan
+~> *${prefix}compress* :
+kompress gambar yang anda kirimkan\n
+~> *${prefix}qnime* :
+quote anime random\n
+~> *${prefix}qnime anime naruto* :
+quotes dari anime naruto\n
+~> *${prefix}qnime char luffy* :
+quotes dari char luffy
 -------------------------------------------------------------------`
 }
 exports.help2 = help2()
@@ -299,7 +307,7 @@ function chromArgs () {
 exports.chromArgs = chromArgs()
 function commandArray() {
     let hasil = [prefix+'menu', prefix+'help', prefix+'sticker', prefix+'stiker', prefix+'creator','#bot restart',prefix+'tiktok',prefix+'translate',prefix+'qrcode',prefix+'ipcheck',prefix+'leave','#bot block','#bot unblock',
-prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',
+prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',
 prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'1cak',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',
 prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban',
 prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report']
