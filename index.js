@@ -14,7 +14,7 @@ const translatte = require('translatte')
 const parseString = require('xml2js').parseString;
 const cron = require('node-cron');
 const google = require('google-it')
-const {wallpaperanime, quotes, simsimichat} =  require('./lib/functions')
+const {wallpaperanime, quotes} =  require('./lib/functions')
 const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-video')
 let setting = JSON.parse(fs.readFileSync('./settings/setting.json'));
 let muted = JSON.parse(fs.readFileSync('./settings/muted.json'));
@@ -58,7 +58,6 @@ function restartAwal(client){
     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null,2));
     fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(msgLimit));
     fs.writeFileSync('./settings/banned.json', JSON.stringify(banned));
-    fs.writeFileSync('./settings/simsimi.json', JSON.stringify(simsimi));
 }
 const opsys = process.platform;
 if (opsys === "win32" || opsys === "win64") {
@@ -126,11 +125,8 @@ const startServer = async (from) => {
             let sjfk = await client.getAllGroups()
             for(let gcList of sjfk){
                 await client.sendText(gcList.contact.id,`Maaf, bot melakukan pembersihan group harian :D`).then(async () => {
-                await client.leaveGroup(gcList.contact.id).catch((err) =>{
-                    if(err){
-                        client.sendText(gcList.contact.id, err)
-                    }
-                })
+                    client.deleteChat(gcList.contact.id)
+                    client.leaveGroup(gcList.contact.id)
             })}
             for(let xchat of chats){
                 await client.deleteChat(xchat)
@@ -147,10 +143,12 @@ const startServer = async (from) => {
         })
         //BLOCK CONTACT WHILE TARGET CALLING BOT
         client.onIncomingCall(call => {
-            client.sendText(call.peerJid, 'Maaf ya, Telp = Blok\ndan tidak akan bisa UNBLOK!');
-            client.contactBlock(call.peerJid);
-            banned.push(call.peerJid)
-            fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
+            client.sendText(call.peerJid, 'Maaf ya, Telp = Blok\ndan tidak akan bisa UNBLOK!').then(() => {
+                client.contactBlock(call.peerJid).then(() => {
+                    banned.push(call.peerJid)
+                    fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
+                });
+            });
         })
         //WHEN BOT IS ADDED TO A GROUP
         client.onAddedToGroup(async (chat) => {
@@ -158,34 +156,25 @@ const startServer = async (from) => {
                 const groups = await client.getAllGroups()
                 if(groups.length > 25){
                     await client.sendText(chat.id, 'Maaf, Jumlah group bot sudah penuh').then(async () =>{
-                        await client.leaveGroup(chat.id).catch(async (err) =>{
-                            if(err){
-                                await client.sendText(sAdmin,err)
-                            }
-                        })
+                        client.deleteChat(chat.id)
+                        client.leaveGroup(chat.id)
                     })
                 }else{
                     if(chat.groupMetadata.participants.length < 25){
                         await client.sendText(chat.id, 'Maaf, BOT keluar jika member group tidak melebihi 25 orang').then(async () =>{
-                            await client.leaveGroup(chat.id).catch(async (err) =>{
-                                if(err){
-                                    await client.sendText(sAdmin,err)
-                                }
-                            })
+                            client.deleteChat(chat.id)
+                            client.leaveGroup(chat.id)
                         })
                     }else{
                         if(!chat.isReadOnly)client.sendText(chat.id, 'Halo semuanya, saya adalah xYz BOT. gunakan '+prefix+'help untuk menggunakan saya :D')
                     }
                 }
             }else{
-                await client.sendText(chat.id, 'Bot sedang maintenance, coba lain hari')
-                await client.leaveGroup(chat.id).catch(async (err) =>{
-                    if(err){
-                        await client.sendText(sAdmin,err)
-                    }
+                await client.sendText(chat.id, 'Bot sedang maintenance, coba lain hari').then(async () => {
+                    client.deleteChat(chat.id)
+                    client.leaveGroup(chat.id)
                 })
             }
-            
         })
         // listening on message
         client.onMessage(async (message) => {
@@ -195,7 +184,7 @@ const startServer = async (from) => {
                 const serial = sender.id
                 const isSadmin = serial === sAdmin
                 let { pushname, verifiedName } = sender
-                pushname = pushname || verifiedName
+                pushname = pushname || veriedName
                 const { formattedTitle } = chat
                 const botNumber = await client.getHostNumber()
                 const groupId = isGroupMsg ? chat.groupMetadata.id : ''
@@ -378,6 +367,8 @@ const startServer = async (from) => {
                         }
                     }
                         if (cmd) {
+                            if (!isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname))
+                            if (isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname), 'in', color(formattedTitle))
                             if(isMsgLimit(serial)){
                                 return
                             }else{
@@ -434,21 +425,6 @@ const startServer = async (from) => {
                                     }
                                 }
                                 break
-                            case prefix+'simsimi help':
-                                const captios = `Informasi tentang Simsimi
-- Apa itu SimSimi?
-Chat bot dengan kecerdasan buatan\n
-- Apakah Simsimi mengaggu?
-Pada dasarnya tidak, tapi dia tetap ngeselin\n
-- Apa syarat penggunaanya?
-Akun anda harus premium\n
-- Mengapa harus premium?
-Karena kami menghormati Developer tersebut\n
-- Berapa harga akun premium?
-Karena jarang orang donasi, jadi harganya 5k :(\n
-- Bagaimana cara menggunakan Simsimi?
-Lihat gambar caption ku :)`;
-                                client.sendImage(from, './settings/simsimi.jpg', 'Simsimi.jpg', captios)
                             case prefix+'bug report':
                                 const bug = body.slice(12)
                                 if(!args[2]) return
@@ -890,12 +866,8 @@ Lihat gambar caption ku :)`;
                                 if (!isGroupMsg) return client.reply(from, 'Maaf, perintah ini hanya dapat dipakai didalam grup!', id)
                                 if (!isGroupAdmins) return client.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin grup!', id)
                                 await client.sendText(from,'Goodbye minna :)').then(async () => {
-                                    await client.leaveGroup(chatId).catch((err) =>{
-                                        if(err){
-                                            client.sendText(from,err)
-                                        }
-                                    })
-                                    await client.deleteChat(chatId)
+                                    client.deleteChat(chatId)
+                                    client.leaveGroup(chatId)
                                 })
                                 break
                             case '#bot clearall':
@@ -905,11 +877,8 @@ Lihat gambar caption ku :)`;
                                 const lkist = await client.getAllGroups()
                                 for(let gcList of lkist){
                                     await client.sendText(gcList.contact.id,`Maaf, bot overload dan tercatat ${groupCount.length} chat aktif`).then(async () => {
-                                    await client.leaveGroup(gcList.contact.id).catch((err) =>{
-                                        if(err){
-                                            client.sendText(gcList.contact.id, err)
-                                        }
-                                    })
+                                    client.deleteChat(gcList.contact.id)
+                                    client.leaveGroup(gcList.contact.id)
                                 })
                                 }
                                 for(let xchat of groupCount){
@@ -1339,8 +1308,6 @@ Season  : *${result.docs[0].season}*
                         limitAdd(serial);
                          });
                     }
-                    if (!isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname))
-                    if (isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname), 'in', color(formattedTitle))
                 }
             } catch (err) {
                 console.log(color('[ERROR]', 'red'), err)

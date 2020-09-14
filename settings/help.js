@@ -41,9 +41,6 @@ Donasi agar bot ini terus aktif dan terupdate
 Cek kuota limit media anda :
 ~> *${prefix}limit*
 -------------------------------------------------------------------
-Ingin mencoba Simsimi premium?
-~> *${prefix}simsimi help*
--------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------
 *GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 25 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
@@ -105,7 +102,6 @@ Nomor BOT XyZ!
 Informasi dan berita BOT :
 ~> *${prefix}info*
 -------------------------------------------------------------------
-
 *JAM AKTIF BOT*
 Jam 9 Pagi - Jam 9 Malam
 *GROUP HARUS MELEBIHI 25 MEMBER ATAU BOT KELUAR*
@@ -120,9 +116,6 @@ Donasi agar bot ini terus aktif dan terupdate
 -------------------------------------------------------------------
 Cek kuota limit media anda :
 ~> *${prefix}limit*
--------------------------------------------------------------------
-Ingin mencoba Simsimi premium?
-~> *${prefix}simsimi help*
 -------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------

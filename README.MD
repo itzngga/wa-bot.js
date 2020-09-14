@@ -21,41 +21,41 @@
 Chat util
 | Feature  | Supported |
 | ------------- | ------------- |
-| Limiting Message  | ✅  |
-| Spam Detector     | ✅  |
-| Overload Detector | ✅  |
+| Limiting Message  |  ✅  |
+| Spam Detector     |  ✅  |
+| Overload Detector |  ✅  |
 
 Downloading Util
 | Feature  | Supported |
 | ------------- | ------------- |
-| Youtube | ✅  |
-| YT to MP3 | ✅  |
-| Twitter | ✅  |
-| Facebook | ✅  |
-| Instagram | ✅  |
-| Likee | ✅  |
+| Youtube |  ✅  |
+| YT to MP3 |  ✅  |
+| Twitter |  ✅  |
+| Facebook |  ✅  |
+| Instagram |  ✅  |
+| Likee |  ✅  |
 
 Media
 | Feature  | Supported |
 | ------------- | ------------- |
-| Image to Sticker | ✅  |
-| Random IMG Quote | ✅  |
-| Corona Util | ✅  |
-| Anime Quote | ✅  |
-| Cekresi | ✅  |
-| Text to QRcode | ✅  |
-| Al-Qur'an Util | ✅  |
-| Translate | ✅  |
-| Text to Speech | ✅  |
-| Google Search | ✅  |
-| Instagram Stalker | ✅  |
-| IMG Compresser | ✅  |
-| What Anime is This | ✅  |
-| Random Waifu IMG | ✅  |
-| Random Anime Wallpaper | ✅  |
-| Random Cat IMG | ✅  |
-| Random Wallpaper | ✅  |
-| BMKG Gempa | ✅  |
+| Image to Sticker |  ✅  |
+| Random IMG Quote |  ✅  |
+| Corona Util |  ✅  |
+| Anime Quote |  ✅  |
+| Cekresi |  ✅  |
+| Text to QRcode |  ✅  |
+| Al-Qur'an Util |  ✅  |
+| Translate |  ✅  |
+| Text to Speech |  ✅  |
+| Google Search |  ✅  |
+| Instagram Stalker |  ✅  |
+| IMG Compresser |  ✅  |
+| What Anime is This |  ✅  |
+| Random Waifu IMG |  ✅  |
+| Random Anime Wallpaper |  ✅  |
+| Random Cat IMG |  ✅  |
+| Random Wallpaper |  ✅  |
+| BMKG Gempa |  ✅  |
 
 ## ContactMe
 https://wa.me/6281297980063
@@ -63,6 +63,12 @@ https://wa.me/6281297980063
 ## Donation
 
 [SAWERIA](https://saweria.co/donate/ItzNgga)
+
+## Thanks to
+
+[WA-Automate](https://github.com/open-wa/wa-automate-nodejs)
+[Azusa Bot](https://github.com/fossabot/AzusaBot)
+[Yoga Sakti](https://github.com/YogaSakti/imageToSticker)
 
 ## Legal
 
