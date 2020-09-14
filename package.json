@@ -1,6 +1,6 @@
 {
     "name": "xyz-bot",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "description": "Whatsapp Bot - sticker creator",
     "main": "index.js",
     "scripts": {
@@ -10,7 +10,7 @@
     "author": "ItzNgga",
     "license": "MIT",
     "dependencies": {
-        "@open-wa/wa-automate": "^2.0.12",
+        "@open-wa/wa-automate": "^2.0.22",
         "axios": "^0.20.0",
         "chalk": "^4.1.0",
         "fluent-ffmpeg": "^2.1.2",
@@ -19,8 +19,9 @@
         "jimp": "^0.16.0",
         "mal-scraper": "^2.7.1",
         "moment": "^2.27.0",
+        "mysql": "^2.18.1",
         "node-cron": "^2.0.3",
-        "node-fetch": "^2.6.0",
+        "node-fetch": "^2.6.1",
         "node-gtts": "^2.0.2",
         "performance-now": "^2.1.0",
         "pm2": "^4.4.1",

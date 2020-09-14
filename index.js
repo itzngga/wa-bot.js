@@ -1,7 +1,7 @@
 const { create, decryptMedia } = require('@open-wa/wa-automate')
 const fs = require('fs')
 const moment = require('moment')
-const { isNullOrUndefined, isArray } = require('util');
+const { isNullOrUndefined } = require('util');
 const malScraper = require('mal-scraper')
 const urlShortener = require('./lib/shortener')
 const color = require('./lib/color.js')
@@ -14,15 +14,16 @@ const translatte = require('translatte')
 const parseString = require('xml2js').parseString;
 const cron = require('node-cron');
 const google = require('google-it')
-const {wallpaperanime, quotes} =  require('./lib/functions')
+const {wallpaperanime, quotes, simsimichat} =  require('./lib/functions')
 const {tiktok, instagram, facebook, youtube, likee,twitter} = require('./lib/dl-video')
 let setting = JSON.parse(fs.readFileSync('./settings/setting.json'));
 let muted = JSON.parse(fs.readFileSync('./settings/muted.json'));
 let limit = JSON.parse(fs.readFileSync('./settings/limit.json'));
 let msgLimit = JSON.parse(fs.readFileSync('./settings/msgLimit.json'));
 let banned = JSON.parse(fs.readFileSync('./settings/banned.json'));
+let info = fs.readFileSync('./settings/info.txt', {encoding: 'utf-8'});
 const {help,license,donasi,bahasa,surah,sensor,help2,chromArgs,commandArray} = require('./settings/help.js');
-var {prefix, banChats, restartState: isRestart,mtc: mtcState} = setting
+let {prefix, banChats, restartState: isRestart,mtc: mtcState} = setting
 const sAdmin = setting.sAdmin
 const serverOption = {
     headless: true,
@@ -32,6 +33,19 @@ const serverOption = {
     autoRefresh: true,
     cacheEnabled: false,
     chromiumArgs: chromArgs
+}
+let state = {
+    status: () => {
+        if(banChats){
+            return 'Nonaktif'
+        }else if(mtcState){
+            return 'Nonaktif'
+        }else if(!mtcState){
+            return 'Aktif'
+        }else{
+            return 'Aktif'
+        }
+    }
 }
 //client sendingMessage after #bot restart command
 function restartAwal(client){
@@ -44,13 +58,12 @@ function restartAwal(client){
     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null,2));
     fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(msgLimit));
     fs.writeFileSync('./settings/banned.json', JSON.stringify(banned));
+    fs.writeFileSync('./settings/simsimi.json', JSON.stringify(simsimi));
 }
 const opsys = process.platform;
 if (opsys === "win32" || opsys === "win64") {
     serverOption['executablePath'] = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
 } else if (opsys === "linux") {
-    // serverOption['browserRevision'] = '737027';
-    // serverOption['executablePath'] = '/usr/bin/chrome'
     serverOption['executablePath'] = '/usr/bin/google-chrome-stable';
 } else if (opsys === "darwin") {
     serverOption['executablePath'] = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -101,22 +114,24 @@ const capitalize = (str) => {
 }
 // END HELPER FUNCTION
 const startServer = async (from) => {
-    create('Imperial', serverOption)
+    create('XyZ', serverOption)
     .then(client => {
-        cron.schedule("*/30 * * * *", async function(){
-            const groupList = await client.getAllGroups()
-            for(let group of groupList){
-                await client.deleteChat(group.contact.id)
-            }
-            console.log('~>',color('[INFO] Delete kicked from group'));
-          });
         cron.schedule('* * * * *', () =>  {
         const obj = [{id: "6281297980063@c.us", msg: 1}]
         msgLimit = obj
         fs.writeFileSync('./settings/msgLimit.json', JSON.stringify(obj))
         });
         cron.schedule("0 55 20 * * *", async function(){
-            const chats = await client.getAllChatIds()
+            let chats = await client.getAllChats()
+            let sjfk = await client.getAllGroups()
+            for(let gcList of sjfk){
+                await client.sendText(gcList.contact.id,`Maaf, bot melakukan pembersihan group harian :D`).then(async () => {
+                await client.leaveGroup(gcList.contact.id).catch((err) =>{
+                    if(err){
+                        client.sendText(gcList.contact.id, err)
+                    }
+                })
+            })}
             for(let xchat of chats){
                 await client.deleteChat(xchat)
             }
@@ -131,16 +146,16 @@ const startServer = async (from) => {
             if (state === 'CONFLICT') client.forceRefocus()
         })
         //BLOCK CONTACT WHILE TARGET CALLING BOT
-        client.onIncomingCall(async (call) => {
-            await client.sendText(call.peerJid, 'Maaf ya, Telp = Blok\ndan tidak akan bisa UNBLOK!');
-            await client.contactBlock(call.peerJid);
+        client.onIncomingCall(call => {
+            client.sendText(call.peerJid, 'Maaf ya, Telp = Blok\ndan tidak akan bisa UNBLOK!');
+            client.contactBlock(call.peerJid);
             banned.push(call.peerJid)
             fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
         })
         //WHEN BOT IS ADDED TO A GROUP
         client.onAddedToGroup(async (chat) => {
-            const groups = await client.getAllGroups()
             if(mtcState === false){
+                const groups = await client.getAllGroups()
                 if(groups.length > 25){
                     await client.sendText(chat.id, 'Maaf, Jumlah group bot sudah penuh').then(async () =>{
                         await client.leaveGroup(chat.id).catch(async (err) =>{
@@ -148,7 +163,6 @@ const startServer = async (from) => {
                                 await client.sendText(sAdmin,err)
                             }
                         })
-                        await client.deleteChat(chat.id)
                     })
                 }else{
                     if(chat.groupMetadata.participants.length < 25){
@@ -179,7 +193,6 @@ const startServer = async (from) => {
                 const { type, body, id, from, t, sender, isGroupMsg, chat, chatId, caption, isMedia, mimetype, quotedMsg } = message
                 if (body == undefined) return
                 const serial = sender.id
-                
                 const isSadmin = serial === sAdmin
                 let { pushname, verifiedName } = sender
                 pushname = pushname || verifiedName
@@ -189,11 +202,11 @@ const startServer = async (from) => {
                 const groupAdmins = isGroupMsg ? await client.getGroupAdmins(groupId) : ''
                 const groupMembers = isGroupMsg ? await client.getGroupMembersId(groupId) : ''
                 const isGroupAdmins = isGroupMsg ? groupAdmins.includes(sender.id) : false
-                const isBanned = banned.includes(chatId)
+                const isBanned = banned.includes(serial)
                 const isBotGroupAdmins = isGroupMsg ? groupAdmins.includes(botNumber + '@c.us') : false
                 const commands = commandArray
                 const cmds = commands.map(x => x + '\\b').join('|')
-                const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'gi')) : type === 'image' && caption ? caption : ''
+                const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'g')) : type === 'image' && caption ? caption : ''
                 const time = moment(t * 1000).format('HH:mm:ss')
                 const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi);
                 const uaOverride = "WhatsApp/2.2029.4 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
@@ -202,7 +215,7 @@ const startServer = async (from) => {
                 }
                 // BEGIN HELPER FUNCTION
                 function isMsgLimit(id){
-                    // if (isSadmin) {return false;}
+                    if (isSadmin) {return false;}
                     let found = false;
                     for (let i of msgLimit){
                         if(i.id === id){
@@ -213,7 +226,7 @@ const startServer = async (from) => {
                                 banned.push(id)
                                 fs.writeFileSync('./settings/banned.json', JSON.stringify(banned))
                                 return true;
-                            }else if(i.msg >= 7){
+                            }else if(i.msg >= 7 && !i.msg >= 12){
                                 found === true
                                 reply('*[ANTI-SPAM]*\nNomor anda terdeteksi spam!\nMohon tidak spam 5 pesan lagi atau nomor anda AUTO BLOK!')
                                 return true
@@ -231,7 +244,7 @@ const startServer = async (from) => {
                     }  
                 }
                 function addMsgLimit(id){
-                    // if (isSadmin) {return;}
+                    if (isSadmin) {return;}
                     var found = false
                     Object.keys(msgLimit).forEach((i) => {
                         if(msgLimit[i].id == id){
@@ -250,7 +263,7 @@ const startServer = async (from) => {
                     for (let i of limit){
                         if(i.id === id){
                             let limits = i.limit;
-                            if (limits > 49) {
+                            if (limits > 24) {
                                 found = true;
                                 reply('Perintah BOT anda sudah mencapai batas, coba esok hari :)')
                                 return true;
@@ -282,7 +295,7 @@ const startServer = async (from) => {
                     }
                 }
                 const msgs = (message) => {
-                    if(message === undefined) return 'Message'
+                    if(!message) return 'Message'
                     if(message.length >= 10){
                         return `${message.substr(0, 15)}`
                     }else{
@@ -311,10 +324,17 @@ const startServer = async (from) => {
                     fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null, 2))
                     reply(`Bot telah di unmute!`)
                 }
-                
+                if(body == prefix+'info'){
+                    let hasilx = info.replace('%state', state.status)
+                    reply(hasilx)
+                }
+                if(body == "Assalamualaikum" || body == "Assalamu'alaikum" || body == "Samlikum"){
+                    reply('Walaikumsalam Wr Wb')
+                }
                 if (isMuted(chatId) && !mtcState && banChat() && !isBanned || isSadmin ) {
                     const args = body.trim().split(' ')
                     if(!isSadmin){
+                        if(!cmd) return
                         const argsList = args.join(" ")
                         if(argsList !== undefined && argsList.match(new RegExp(`\\[`, 'gi')) && argsList.match(new RegExp(`]`, 'gi'))) return await client.sendText(from,'perintah tidak boleh pakai []!')
                     }
@@ -335,12 +355,12 @@ const startServer = async (from) => {
                     if(body == prefix+'sticker' || body == prefix+'stiker' || caption == prefix+'sticker' || caption == prefix+'stiker'){
                         if (isMedia) {
                             const mediaData = await decryptMedia(message, uaOverride)
-                            const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
+                            const imageBase64 = `data:image/jpeg;base64,${mediaData.toString('base64')}`
                             await client.sendImageAsSticker(from, imageBase64)
                             limitAdd(serial)
                         } else if (quotedMsg && quotedMsg.type == 'image') {
                             const mediaData = await decryptMedia(quotedMsg)
-                            const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
+                            const imageBase64 = `data:image/jpeg;base64,${mediaData.toString('base64')}`
                             await client.sendImageAsSticker(from, imageBase64)
                             limitAdd(serial)
                         } else if (args.length == 2) {
@@ -353,10 +373,8 @@ const startServer = async (from) => {
                             } else {
                                 client.sendText(from, 'Maaf, link yang kamu kirim tidak valid.')
                             }
-                        } else if(type == 'video' || quotedMsg.type == 'video'){
-                            client.sendText(from, 'Video tidak bisa di jadikan sticker!')
                         } else {
-                            client.sendText(from, `Tidak ada gambar! Untuk membuat sticker kirim gambar dengan caption ${prefix}stiker`)
+                            client.sendText(from, `Tidak ada gambar! Untuk membuat sticker kirim gambar dengan caption \n${prefix}stiker`)
                         }
                     }
                         if (cmd) {
@@ -369,6 +387,16 @@ const startServer = async (from) => {
                             case prefix+'menu':
                             case prefix+'help':
                                 client.sendText(from, help)
+                            break
+                            case prefix+'activate':
+                                if(args[1]){
+                                    const premis = addKey(serial, args[1])
+                                    if(!premis == 'Key yang anda berikan invalid!'){
+                                        client.sendText(from, 'Nomor anda telah terdaftar sebagai akun premium di BOT ini!')
+                                    }else{
+                                        client.sendText(from, premis)
+                                    }
+                                }
                             break
                             case '#donasi':
                                 client.sendText(from, donasi)
@@ -391,7 +419,7 @@ const startServer = async (from) => {
                                 }
                                 let group = await client.getAllGroups()
                                 if(group.length > 25){
-                                    return client.sendText(from, 'Maaf, Jumlah group bot sudah penuh')
+                                    return client.sendText(from, 'Maaf, Batas group yang dapat bot tampung sudah penuh')
                                 }else{
                                     const log = await client.inviteInfo(args[1])
                                     if(log.size < 25 && !isSadmin) {
@@ -406,9 +434,24 @@ const startServer = async (from) => {
                                     }
                                 }
                                 break
+                            case prefix+'simsimi help':
+                                const captios = `Informasi tentang Simsimi
+- Apa itu SimSimi?
+Chat bot dengan kecerdasan buatan\n
+- Apakah Simsimi mengaggu?
+Pada dasarnya tidak, tapi dia tetap ngeselin\n
+- Apa syarat penggunaanya?
+Akun anda harus premium\n
+- Mengapa harus premium?
+Karena kami menghormati Developer tersebut\n
+- Berapa harga akun premium?
+Karena jarang orang donasi, jadi harganya 5k :(\n
+- Bagaimana cara menggunakan Simsimi?
+Lihat gambar caption ku :)`;
+                                client.sendImage(from, './settings/simsimi.jpg', 'Simsimi.jpg', captios)
                             case prefix+'bug report':
                                 const bug = body.slice(12)
-                                if(bug == undefined || bug == ' ') return
+                                if(!args[2]) return
                                 if(isGroupMsg){
                                     client.sendText(sAdmin, `*[BUG REPORT]*\nNO PENGIRIM : wa.me/${serial.match(/\d+/g)}\nGroup : ${formattedTitle}\n\n${bug}`)
                                     reply('Masalah telah di laporkan ke owner BOT, laporan palsu/main2 tidak akan ditanggapi.')
@@ -430,7 +473,7 @@ const startServer = async (from) => {
                                 var found = false
                                 for(let lmt of limit){
                                     if(lmt.id === serial){
-                                        reply(`Kuota limit media anda tersisa : *${50-lmt.limit}*`)
+                                        reply(`Kuota limit media anda tersisa : *${25-lmt.limit}*`)
                                         found = true
                                     }
                                 }
@@ -438,7 +481,7 @@ const startServer = async (from) => {
                                     let obj = {id: `${serial}`, limit:1};
                                     limit.push(obj);
                                     fs.writeFile('./settings/limit.json',JSON.stringify(limit,null, 2), function(err){if(err) console.log(err)});
-                                    reply(`Kuota limit media anda tersisa : *50*`)
+                                    reply(`Kuota limit media anda tersisa : *25*`)
                                 }
                                 break
                             case prefix+'translate':
@@ -455,6 +498,21 @@ const startServer = async (from) => {
                                     });
                                 }
                             break
+                            case '#lkey list':
+                                if(!isSadmin) return
+                                let hasil, i = 1;
+                                for(let index of JSON.parse(fs.readFileSync('./settings/premicode.json'))){
+                                    hasil += i+'. '+index
+                                }
+                                client.sendText(from, hasil)
+                                break
+                            case '#lkey add':
+                                if(!isSadmin) return
+                                let keys = JSON.parse(fs.readFileSync('./settings/premicode.json'))
+                                keys.push(args[2])
+                                fs.writeFileSync('./settings/premicode.json', JSON.stringify(keys))
+                                client.sendText(from, 'Success!')
+                                break
                             case prefix+'ipcheck':
                                 if(isLimit(serial)) return
                                 if(!args.lenght >= 2) return
@@ -505,7 +563,7 @@ const startServer = async (from) => {
                                 }
                             break
                             case prefix+'1cak':
-                                return client.sendText(from,'Sedang overload, coba lagi besok :)')
+                                return client.sendText(from,'1cak sedang di disable karena server penyedia gambar OFFLANE')
                                 if(isLimit(serial)) return
                                 axios.get(`https://rest.farzain.com/api/1cak.php?apikey=3Ot5wNlKgSNK0MFVR0MEILiEq`).then((res) => {
                                     let title = res.data.title
@@ -532,6 +590,7 @@ const startServer = async (from) => {
                             case prefix+'igstalk':
                                 if(isLimit(serial)) return
                                 if(!args.lenght >= 2) return
+                                if(!args[1]) return
                                 let usrname = args[1]
                                 if (usrname.includes('@')) {
                                     usrname = usrname.replace('@', '');
@@ -581,8 +640,7 @@ const startServer = async (from) => {
                                     limitAdd(serial);
                                     browser.close();
                                     }).catch((err) => {
-                                    client.sendText(from,
-                                    `[GAGAL] Username tidak ditemukan!`
+                                        client.sendText(from,`[GAGAL] Username tidak ditemukan!`
                                     );
                                     browser.close();
                                     });
@@ -601,18 +659,21 @@ const startServer = async (from) => {
                                 client.sendText(from, 'Succes unban target!')
                                 break
                             case prefix+'gtts':
+                                if(isLimit(serial)) return  
                                 if(args[0] == undefined || args[1] == undefined) return
                                 let gttsText = body.slice(6);
                                 if(gttsText.length >= 250) return client.sendText(from,'Teks Kepanjangan :(')
                                 var gtts = new gTTs(gttsText, 'id');
                                 gtts.save('./gtts/gtts.mp3', function () {
                                     client.sendPtt(from, './gtts/gtts.mp3')
+                                    limitAdd(serial)
                                 })
                                 break
                             case '@6289654471026':
                                 await client.sendTextWithMentions(chatId, `Hai @${serial.match(/\d+/g)}, ada yang bisa saya bantu? ${prefix}help untuk melihat list perintah :D`)
                                 break
                             case prefix+'lang':
+                                if(isLimit(serial)) return
                                 if(args[1] == undefined || args[2] == undefined) return
                                 let lang = body.split(' ')[1];
                                 let langText = body.slice(6+lang.length);
@@ -620,6 +681,7 @@ const startServer = async (from) => {
                                 var gtts = new gTTs(langText, lang);
                                 gtts.save('./gtts/lang.mp3', function () {
                                     client.sendPtt(from, './gtts/lang.mp3')
+                                    limitAdd(serial)
                                 })
                                 break
                             case prefix+'cekresi':
@@ -674,7 +736,7 @@ const startServer = async (from) => {
                                     const sr = /{(.*?)}/gi;
                                     const hs = res.data.acak.id.ayat;
                                     const ket = `${hs}`.replace(sr, '');
-                                    hasil = `[${ket}]   ${res.data.acak.ar.teks}\n\n${res.data.acak.id.teks}(QS.${res.data.surat.nama}, Ayat ${ket})`;
+                                    let hasil = `[${ket}]   ${res.data.acak.ar.teks}\n\n${res.data.acak.id.teks}(QS.${res.data.surat.nama}, Ayat ${ket})`;
                                     client.sendText(from, hasil);
                                 })
                                 break
@@ -780,11 +842,6 @@ const startServer = async (from) => {
                                 fs.writeFileSync('./settings/setting.json', JSON.stringify(setting, null, 2))
                                 reply('Global chat has been enabled!')
                                 break
-                            case "Assalamualaikum":
-                            case "Assalamu'alaikum":
-                            case "Samlikum":
-                                reply('Walaikumsalam Wr Wb')
-                                break
                             case '#mtc start':
                                 if(mtcState === true) return
                                 if(!isSadmin) return
@@ -843,6 +900,7 @@ const startServer = async (from) => {
                                 break
                             case '#bot clearall':
                                 if(!isSadmin) return
+                                client.sendText(from, 'Genosida di mulai!')
                                 const groupCount = await client.getAllChatIds()
                                 const lkist = await client.getAllGroups()
                                 for(let gcList of lkist){
@@ -1130,14 +1188,14 @@ const startServer = async (from) => {
                             case prefix+'Waifu':
                                 if(isLimit(serial)) return
                                 q8 = q2 = Math.floor(Math.random() * 98) + 10;
-                                client.sendFileFromUrl(from, 'http://randomwaifu.altervista.org/images/00'+q8+'.png', 'Waifu.png','How is she?'); // UwU)/ Working Fine
+                                client.sendFileFromUrl(from, 'http://randomwaifu.altervista.org/images/00'+q8+'.png', 'Waifu.png','Gimana bro?');
                                 limitAdd(serial)
                                 break
                             case prefix+'kucing':
                                 if(isLimit(serial)) return
                                 q2 = Math.floor(Math.random() * 900) + 300;
                                 q3 = Math.floor(Math.random() * 900) + 300;
-                                client.sendFileFromUrl(from, 'http://placekitten.com/'+q3+'/'+q2, 'kucing.png','Neko');
+                                client.sendFileFromUrl(from, 'http://placekitten.com/'+q3+'/'+q2, 'kucing.png','Kucing nih');
                                 limitAdd(serial)
                             break
                             case prefix+'wallpaper':
@@ -1159,7 +1217,7 @@ const startServer = async (from) => {
                                             data.data.find(i => {
                                                 if(i.provinsi.toLowerCase() == province){
                                                     founded = true
-                                                    client.sendText(from, `╭──[ Kasus di ${i.provinsi}]───\n├ Positif : ${intl(i.kasusPosi)} Kasus\n├ Sembuh : ${intl(i.kasusSemb)} Kasus\n├ Meninggal : ${intl(i.kasusMeni)} Kasus\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ xYz WhatsApp Bot ]───`)
+                                                    client.sendText(from, `╭──[ Kasus di ${i.provinsi} ]───\n├ Positif : ${intl(i.kasusPosi)} Kasus\n├ Sembuh : ${intl(i.kasusSemb)} Kasus\n├ Meninggal : ${intl(i.kasusMeni)} Kasus\n├ Tetap Jaga Kesehatan dan #STAYATHOME\n╰──[ xYz WhatsApp Bot ]───`)
                                                     limitAdd(serial)
                                                 }
                                             })
@@ -1238,11 +1296,6 @@ const startServer = async (from) => {
                                     await processImgs();
                             break
                         }
-                        if (!isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd[0])), 'from', color(pushname))
-                        if (isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd[0])), 'from', color(pushname), 'in', color(formattedTitle))
-                    } else {
-                        if (!isGroupMsg) console.log('~>',color('[MSG]', 'yellow'), time, color(msgs(body))+' from', color(pushname))
-                        if (isGroupMsg) console.log('~>',color('[MSG]', 'yellow'), time, color(msgs(body))+' from', color(pushname), 'in', color(formattedTitle))
                     }
                     if(caption == undefined) return
                     if(caption == prefix+'compress' && isMedia){
@@ -1286,6 +1339,8 @@ Season  : *${result.docs[0].season}*
                         limitAdd(serial);
                          });
                     }
+                    if (!isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname))
+                    if (isGroupMsg) console.log('~>',color('[EXEC]', 'yellow'), time, color(msgs(cmd.toString())), 'from', color(pushname), 'in', color(formattedTitle))
                 }
             } catch (err) {
                 console.log(color('[ERROR]', 'red'), err)

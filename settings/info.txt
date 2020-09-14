@@ -1,0 +1,22 @@
+*XyZ BOT Information*
+
+Status BOT : %state
+
+Update terbaru : 
+1.Mengurangi limit penggunaan ke 25 perhari
+agar menghindari lag, diputuskan 25 limit perhari
+2.Menambahkan fitur !info
+agar pengguna bisa melihat status bot dan update walau sedang maintenance/bot off
+3.Menyesuaikan limit media
+!gtts dan !lang kini berpengaruh limit harian
+
+Bug fix terbaru :
+1.Fix lag dari telepon
+beberapa telepon menyebabkan lag, ttp saja telepon kami blokir
+2.Fix banned tidak bekerja
+beberapa hari ini banned tidak bekerja
+
+Mohon gunakan BOT secara logis adan bermatabat sebagai manusia, BOT bukan manusia jadi jangan di ajak ngobrol/disalahgunakan :D
+
+Jika ada masalah harap lapor dengan
+*!bug report*

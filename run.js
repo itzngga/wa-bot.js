@@ -4,14 +4,11 @@ const fs = require('fs');
 pm2.connect((error) => {
     if (error) {
       console.error(error)
-      process.exit(2)
     }
-  
     pm2.start({ script: 'index.js' }, (error, apps) => {
       pm2.disconnect() // Disconnects from PM2
       if (error) {
         console.error(error)
-        process.exit(2)
       }
     })
 
@@ -22,7 +19,6 @@ pm2.connect((error) => {
       pm2.restart('index', (error) => {
         if (error) {
           console.error(error)
-          process.exit(2)
         }
       })
       console.log('[INFO] chat enabled');
@@ -34,7 +30,6 @@ pm2.connect((error) => {
       pm2.restart('index', (error) => {
         if (error) {
           console.error(error)
-          process.exit(2)
         }
       })
       console.log('[INFO] Limit restarted!');
@@ -47,21 +42,18 @@ pm2.connect((error) => {
       pm2.restart('index', (error) => {
         if (error) {
           console.error(error)
-          process.exit(2)
         }
       })
       console.log('[INFO] chat enabled');
     })
-
     setInterval(() => {
       pm2.describe('index', (error, scripts) => {
         const uptime = Date.now() - scripts[0].pm2_env.pm_uptime
         if (uptime > 3600000) {
-          console.log(`Restart after ${exitTimeout} minutes...`)
+          console.log(`Restart after 1 hour...`)
           pm2.restart('index', (error) => {
             if (error) {
               console.error(error)
-              process.exit(2)
             }
           })
         }

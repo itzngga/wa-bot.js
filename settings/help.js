@@ -4,6 +4,16 @@ let setting = JSON.parse(fs.readFileSync('./settings/setting.json'));
 const prefix = setting.prefix
 exports.surah = surah;
 
+function commandArray() {
+    let hasil = [prefix+'menu', prefix+'help', prefix+'sticker', prefix+'stiker', prefix+'creator','#bot restart',prefix+'tiktok',prefix+'translate',prefix+'qrcode',prefix+'ipcheck',prefix+'leave','#bot block','#bot unblock',prefix+'simsimi help',
+prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',prefix+'simsimi stop',
+prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'1cak',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',prefix+'simsimi start',prefix+'info',
+prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban','#lkey list','#lkey add',
+prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report',prefix+'activate']
+    return hasil
+}
+exports.commandArray = commandArray()
+
 function help() {
     let hasil = `~ ~>  *xYz BOT Help*  <~ ~
 -------------------------------------------------------------------
@@ -12,6 +22,9 @@ Ada masalah? laporkan masalah dengan :
 -------------------------------------------------------------------
 Nomor BOT XyZ!
 ~> *wa.me/6289654471026*
+-------------------------------------------------------------------
+Informasi dan berita BOT :
+~> *${prefix}info*
 -------------------------------------------------------------------
 *JAM AKTIF BOT*
 Jam 9 Pagi - Jam 9 Malam
@@ -28,15 +41,18 @@ Donasi agar bot ini terus aktif dan terupdate
 Cek kuota limit media anda :
 ~> *${prefix}limit*
 -------------------------------------------------------------------
+Ingin mencoba Simsimi premium?
+~> *${prefix}simsimi help*
+-------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------
-*GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 50 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
+*GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 25 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
 -------------------------------------------------------------------
 ~> *${prefix}sticker* :
 kirim gambar dengan caption atau balas gambar yang sudah dikirim.\n
 ~> *${prefix}tiktok [url]* :
 mengunduh video tiktok dengan url\n
-~> *${prefix}tw [url]* : 
+~> *${prefix}twt [url]* : 
 mengunduh media twitter dengan url\n
 ~> *${prefix}fb [url]* : 
 mengunduh media facebook dengan url\n
@@ -59,9 +75,9 @@ kirim informasi surah al-quran\n
 ~> *${prefix}surah [no surah] ayat [args]* : 
 kirim arab,latin,dan arti surah menurut 
 [args] adalah :
-*1-7*    ~> Ayat 1 sampai 7
-*1,2,3* ~> Ayat pilihan 1,2,3
-*10*     ~> Ayat ke-10\n
+*1-7*    ~>   Ayat 1 sampai 7
+*1,2,3* ~>   Ayat pilihan 1,2,3
+*10*     ~>   Ayat ke-10\n
 ~> *${prefix}list surah* :
 menampilkan list nomor surah\n
 ~> *${prefix}quote* : 
@@ -86,6 +102,10 @@ Ada masalah? laporkan masalah dengan :
 Nomor BOT XyZ!
 ~> *wa.me/6289654471026*
 -------------------------------------------------------------------
+Informasi dan berita BOT :
+~> *${prefix}info*
+-------------------------------------------------------------------
+
 *JAM AKTIF BOT*
 Jam 9 Pagi - Jam 9 Malam
 *GROUP HARUS MELEBIHI 25 MEMBER ATAU BOT KELUAR*
@@ -101,9 +121,12 @@ Donasi agar bot ini terus aktif dan terupdate
 Cek kuota limit media anda :
 ~> *${prefix}limit*
 -------------------------------------------------------------------
+Ingin mencoba Simsimi premium?
+~> *${prefix}simsimi help*
+-------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------
-*GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 50 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
+*GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 25 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
 -------------------------------------------------------------------
 ~> *${prefix}leave* :
 keluar dari group ini\n
@@ -166,7 +189,7 @@ exports.license = license()
 function donate (){
     return `jika bot ini dirasa bermanfaat 
 marilah berdonasi agar bot bisa terus
-aktif dan update.\n\nSAWERIA: https://saweria.co/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\n\nwa.me/6281297980063
+aktif dan update.\n\nSAWERIA: https://saweria.co/donate/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\n\nwa.me/6281297980063
     `
 }
 exports.donasi = donate()
@@ -177,8 +200,8 @@ function sensor() {
 }
 exports.sensor = sensor();
 function bahasa() {
-    return `*List kode Bahasa*
-	Code       Bahasa
+    return `*List kode Bahasa*\n
+	*Code       Bahasa*
     sq        Albanian
     ar        Arabic
     hy        Armenian
@@ -305,12 +328,3 @@ function chromArgs () {
     return hasil
 }
 exports.chromArgs = chromArgs()
-function commandArray() {
-    let hasil = [prefix+'menu', prefix+'help', prefix+'sticker', prefix+'stiker', prefix+'creator','#bot restart',prefix+'tiktok',prefix+'translate',prefix+'qrcode',prefix+'ipcheck',prefix+'leave','#bot block','#bot unblock',
-prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',
-prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'1cak',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',
-prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban',
-prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report']
-    return hasil
-}
-exports.commandArray = commandArray()

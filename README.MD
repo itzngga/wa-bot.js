@@ -59,11 +59,10 @@ Media
 
 ## ContactMe
 https://wa.me/6281297980063
-@itzngga
 
 ## Donation
 
-[SAWERIA](https://saweria.co/ItzNgga)
+[SAWERIA](https://saweria.co/donate/ItzNgga)
 
 ## Legal
 

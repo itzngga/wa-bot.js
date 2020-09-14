@@ -114,3 +114,4 @@ dist
 .tern-port
 quote/compressed.jpeg
 quote/quoteIt.jpeg
+session.data.json
