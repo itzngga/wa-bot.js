@@ -819,7 +819,7 @@ _*Processing Sukses #XyZ BOT*_`
                         }
                         break
                     case prefix+'everyone':
-                        // Premium
+                        //
                         break
                     case prefix+'banchat on':
                         if(setting.banChats === true) return

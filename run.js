@@ -58,3 +58,4 @@ pm2.connect((error) => {
       console.log('[INFO] chat enabled');
     })
   })
+})

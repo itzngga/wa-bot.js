@@ -4,6 +4,6 @@
   "restartId": "undefined",
   "banChats": false,
   "prefix": "!",
-  "mtc": false,
+  "mtc": true,
   "whitelist": []
 }
