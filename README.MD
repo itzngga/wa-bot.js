@@ -45,6 +45,7 @@ pm2 monit
 | Facebook |✅|
 | Instagram |❎|
 | Likee |✅|
+
 Instagram currently disabled due to unexpected error
 
 #### Media
