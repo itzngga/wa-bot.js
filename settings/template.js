@@ -5,15 +5,16 @@ const prefix = setting.prefix
 exports.surah = surah;
 
 function commandArray() {
-    let hasil = [prefix+'menu', prefix+'help', prefix+'sticker', prefix+'stiker', prefix+'creator','#bot restart',prefix+'tiktok',prefix+'translate',prefix+'qrcode',prefix+'ipcheck',prefix+'leave','#bot block','#bot unblock',prefix+'simsimi help',
-prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',prefix+'simsimi stop',
-prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'1cak',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',prefix+'simsimi start',prefix+'info',
-prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban','#lkey list','#lkey add',
-prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report',prefix+'activate']
+    let hasil = [prefix+'menu',prefix+'help', prefix+'sticker', prefix+'stiker', prefix+'creator','#bot restart',prefix+'tiktok',prefix+'translate',prefix+'qrcode',prefix+'leave','#bot block','#bot unblock',prefix+'simsimi help',prefix+'lirik',prefix+'nhinfo',
+prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',prefix+'simsimi stop',prefix+'adult zone',prefix+'everyone',
+prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',prefix+'simsimi start',prefix+'info',prefix+'delete',prefix+'brainly',
+prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban','#lkey list','#lkey add',prefix+'compress',
+prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report',prefix+'activate','#bot refresh','#whitelist add']
     return hasil
 }
 exports.commandArray = commandArray()
 
+//Copy template = take down BOT!
 function help() {
     let hasil = `~ ~>  *xYz BOT Help*  <~ ~
 -------------------------------------------------------------------
@@ -22,6 +23,9 @@ Ada masalah? laporkan masalah dengan :
 -------------------------------------------------------------------
 Nomor BOT XyZ!
 ~> *wa.me/6289654471026*
+-------------------------------------------------------------------
+XyZ BOT Forum!
+~> https://chat.whatsapp.com/DDYkuiq5h2RKwO4KOFbVfP
 -------------------------------------------------------------------
 Informasi dan berita BOT :
 ~> *${prefix}info*
@@ -41,12 +45,15 @@ Donasi agar bot ini terus aktif dan terupdate
 Cek kuota limit media anda :
 ~> *${prefix}limit*
 -------------------------------------------------------------------
+Ingin mencoba Simsimi premium?
+~> *${prefix}simsimi help*
+-------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------
 *GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 25 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
 -------------------------------------------------------------------
 ~> *${prefix}sticker* :
-kirim gambar dengan caption atau balas gambar yang sudah dikirim.\n
+kirim gambar dengan caption atau reply gambar yang sudah dikirim.\n
 ~> *${prefix}tiktok [url]* :
 mengunduh video tiktok dengan url\n
 ~> *${prefix}twt [url]* : 
@@ -61,6 +68,12 @@ mengunduh video youtube dengan url\n
 convert video ke audio youtube dengan url\n
 ~> *${prefix}likee [url]* : 
 mengunduh media sosmed likee dengan url\n
+~> *${prefix}brainly [pertanyaan]* :
+mencari pertanyaan di brainly\n
+~> *${prefix}lirik [artis] [lagu]* :
+lirik dari artis dan lagu
+NOTE: nama artis dan lagu tidak boleh dipisah SPACE!
+Contoh: ${prefix}lirik AlanWalker Faded\n
 ~> *${prefix}quoteit [teks]* : 
 kirim gambar quote random dengan custom teks\n
 ~> *${prefix}kucing* : 
@@ -99,6 +112,9 @@ Ada masalah? laporkan masalah dengan :
 Nomor BOT XyZ!
 ~> *wa.me/6289654471026*
 -------------------------------------------------------------------
+XyZ BOT Forum!
+~> https://chat.whatsapp.com/DDYkuiq5h2RKwO4KOFbVfP
+-------------------------------------------------------------------
 Informasi dan berita BOT :
 ~> *${prefix}info*
 -------------------------------------------------------------------
@@ -117,23 +133,26 @@ Donasi agar bot ini terus aktif dan terupdate
 Cek kuota limit media anda :
 ~> *${prefix}limit*
 -------------------------------------------------------------------
+Ingin mencoba Simsimi premium?
+~> *${prefix}simsimi help*
+-------------------------------------------------------------------
 _*[WARNING]*_
 -------------------------------------------------------------------
 *GUNAKAN BOT INI DENGAN BIJAK, JIKA ANDA TIDAK MAU PATUH JANGAN PAKAI BOT INI! BATAS PERINTAH BOT PER-USER ADALAH 25 PERHARI DAN DI RESET SETIAP HARINYA, BOT JUGA TIDAK AKAN MEMBALAS JIKA PERINTAH TIDAK SPESIFIK ATAU ANDA MELEBIHI LIMIT MEDIA*
 -------------------------------------------------------------------
 ~> *${prefix}leave* :
 keluar dari group ini\n
+~> *${prefix}everyone* :
+tag semua member di group\n
 ~> *${prefix}google [url]* :
 mencari google pada hasil pertama\n
+~> *${prefix}delete* :
+hapus pesan dari bot dengan reply\n
 ~> *${prefix}bmkg* :
 informasi gempa > 5.1sr terbaru\n
-~> *${prefix}ipcheck [ip]* :
-cek geo ip [TIDAK AKURAT]\n
 ~> *${prefix}translate [kode bahasa] [teks]* :
 translate dari kode bahasa ke indonesia
 *${prefix}bahasa* untuk melihat daftar kodebahasa\n
-~> *${prefix}1cak* :
-meme random dari 1cak\n
 ~> *${prefix}qrcode [teks]* :
 mengubah teks ke qrcode\n
 ~> *${prefix}igstalk [username]* :
@@ -145,26 +164,26 @@ mengubah teks ke suara bahasa lain\n
 ~> *${prefix}cekresi [no resi] [kurir]* :
 cek resi instan, list kurir :
 jne,pos,jnt,sicepat,tiki,anteraja,wahana,\nninja,lion,lek\n
-~> *${prefix}nhder [kode nuklir]* :
-download komik nhentai dalam bentuk Zip\n
-~> *${prefix}wanime* :
-kirim wallpaper random anime \n[ZONK = gambar MESUM]\n
-~> *${prefix}waifu* :
-kirim gambar waifu random \n[ZONK = gambar MESUM]\n
 ~> *${prefix}wait* :
-what anime is this (kirim gambar dengan caption)\n
+what anime is this\n(kirim gambar dengan caption)
+atau reply gambar dengan ${prefix}wait\n
+~> *${prefix}anime [nama anime]* :
+mencari anime bedasarkan nama anime\n
+~> *${prefix}adult zone* :
+zona konten dewasa bot ini\n
 ~> *${prefix}wallpaper* :
 kirim gambar random walppaper\n
 ~> *${prefix}join [link group]* :
 join ke group dengan link\n
 ~> *${prefix}compress* :
-kompress gambar yang anda kirimkan\n
+kompress gambar yang anda kirimkan
+atau reply gambar dengan ${prefix}compress\n
 ~> *${prefix}qnime* :
 quote anime random\n
 ~> *${prefix}qnime anime naruto* :
 quotes dari anime naruto\n
-~> *${prefix}qnime char luffy* :
-quotes dari char luffy
+~> *${prefix}qnime char Megumin* :
+quotes dari char Megumin
 -------------------------------------------------------------------`
 }
 exports.help2 = help2()
@@ -179,15 +198,29 @@ function license(){
 Terimakasih :D`;
 }
 exports.license = license()
+function adult (){
+    return `_Adult zone, hasil command mungkin mengandung unsur dewasa_
+-------------------------------------------------------------------
+~> *${prefix}nhder [kode nuklir]* :
+download komik nhentai dalam bentuk Zip\n
+~> *${prefix}nhinfo [kode nuklir]* :
+informasi dari manga nhentai\n
+~> *${prefix}wanime* :
+kirim wallpaper random anime\n
+~> *${prefix}waifu* :
+kirim gambar waifu random
+-------------------------------------------------------------------`
+}
+exports.adult = adult()
 function donate (){
     return `jika bot ini dirasa bermanfaat 
 marilah berdonasi agar bot bisa terus
-aktif dan update.\n\nSAWERIA: https://saweria.co/donate/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\n\nwa.me/6281297980063
+aktif dan update.\n\nSAWERIA: https://saweria.co/donate/ItzNgga\nOVO: 081297980063\nDANA: 081297980063\nGOPAY: 081297980063\nINDOSAT: 08568970782\n\nwa.me/6281297980063
     `
 }
 exports.donasi = donate()
 function sensor() {
-    //   Kata Kata yang terlalu kasar
+    // Kata Kata yang terlalu tabu untuk di gunakan
     let arrWord = ['tuhan','dewa','yesus','krisna','allah','atheis','agama','buddha','biksu','ulama','ustadz','habib','nabi','rasul','god','theis','pki','komunis','roh kudus','kitab','alquran'];
     return arrWord;
 }
@@ -272,6 +305,8 @@ function chromArgs () {
     '--disable-field-trial-config',
     '--disable-fine-grained-time-zone-detection',
     '--disable-geolocation',
+    "--proxy-server='direct://'",
+    '--proxy-bypass-list=*',
     '--disable-gl-extensions',
     '--disable-gpu',
     '--disable-gpu-early-init',
