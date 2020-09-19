@@ -284,10 +284,17 @@ const startServer = async (from) => {
                     }
                 }
                 // END HELPER FUNCTION
-                // END HELPER FUNCTION
                 if(body === prefix+'mute' && isMuted(chatId) == true){
                     if(isGroupMsg) {
                         if (!isGroupAdmins) return client.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin grup!', id)
+                        if(isMsgLimit(serial)){
+                            return
+                        }else{
+                            addMsgLimit(serial)
+                        }
+                        muted.push(chatId)
+                        fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null, 2))
+                        reply(`Bot telah di mute pada chat ini! ${prefix}unmute untuk unmute!`)
                     }else{
                         if(isMsgLimit(serial)){
                             return
@@ -302,6 +309,15 @@ const startServer = async (from) => {
                 if(body === prefix+'unmute' && isMuted(chatId) == false){
                     if(isGroupMsg) {
                         if (!isGroupAdmins) return client.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh admin grup!', id)
+                        if(isMsgLimit(serial)){
+                            return
+                        }else{
+                            addMsgLimit(serial)
+                        }
+                        let index = muted.indexOf(chatId);
+                        muted.splice(index,1)
+                        fs.writeFileSync('./settings/muted.json', JSON.stringify(muted, null, 2))
+                        reply(`Bot telah di unmute!`)         
                     }else{
                         if(isMsgLimit(serial)){
                             return

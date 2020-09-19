@@ -37,6 +37,7 @@ Bug fix :
 3.Fix lag limit
 4.Fix !join
 5.Fix pembersihan group harian
+6.Fix !mute dan !unumute
 
 Mohon gunakan BOT secara logis dan bermatabat sebagai manusia, BOT bukan manusia jadi jangan di ajak ngobrol/disalahgunakan :D
 
