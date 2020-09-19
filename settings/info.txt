@@ -1,0 +1,44 @@
+_*XyZ BOT Information*_
+
+Status BOT : %state
+
+BOT sedang melakukan Maintenance hingga sabtu PAGI!
+
+Update terbaru BOT :
+1.!lirik
+mendapatkan lirik begitu mudah
+2.!anime
+cari anime bedasarkan nama anime
+3.Memisahkan perintah dewasa dari help ke !adult zone
+4.!everyone
+tag semua member di group
+5.!nhinfo
+informasi manga nhentai menurut kode nuklir
+6.Kini !mute dan !unumute
+hanya bisa digunakan oleh admin group
+7.!delete
+hapus chat dari BOT dengan reply
+8.Update tampilan !corona
+9.Update tampilan !igstalk
+10.Update tampilan !bmkg
+11.Update tampilan !google
+12.!brainly
+mencari pertanyaan di brainly
+13.!wait
+kini bisa dengan reply gambar
+14.!compress
+kini bisa dengan reply gambar
+15.Update tampilan !quran
+16.Update tampilan !surah
+
+Bug fix :
+1.Fix banned tidak bekerja
+2.Fix whitelist group
+3.Fix lag limit
+4.Fix !join
+5.Fix pembersihan group harian
+
+Mohon gunakan BOT secara logis dan bermatabat sebagai manusia, BOT bukan manusia jadi jangan di ajak ngobrol/disalahgunakan :D
+
+Jika ada masalah harap lapor dengan
+*!bug report*
