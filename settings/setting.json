@@ -5,6 +5,7 @@
   "banChats": false,
   "Rest": true,
   "limitCount": 25,
+  "memberLimit": 25,
   "groupLimit": 25,
   "prefix": "!",
   "mtc": false,

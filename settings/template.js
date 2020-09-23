@@ -9,7 +9,7 @@ function commandArray() {
 prefix+'ig',prefix+'instagram',prefix+'twt',prefix+'twitter', prefix+'halo', prefix+'about', prefix+'speed',prefix+'ping', prefix+'fb',prefix+'facebook',prefix+'yt',prefix+'gtts',prefix+'lang','@6289654471026',prefix+'qnime',prefix+'simsimi stop',prefix+'adult zone',prefix+'everyone',
 prefix+'youtube',prefix+'ytmp3',prefix+'waifu',prefix+'Waifu',prefix+'kucing',prefix+'neko',prefix+'wallpaper',prefix+'bmkg',prefix+'cekresi',prefix+'wait',prefix+'bahasa',prefix+'quoteit','#bot clearall',prefix+'simsimi start',prefix+'info',prefix+'delete',prefix+'brainly',
 prefix+'wanime',prefix+'corona',prefix+'nhder',prefix+'anime',prefix+'quote',prefix+'likee',prefix+'like',prefix+'mnt',prefix+'google',prefix+'igstalk',prefix+'quran',prefix+'surah',prefix+'list surah',prefix+'ban',prefix+'unban','#lkey list','#lkey add',prefix+'compress',
-prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report',prefix+'activate','#bot refresh','#whitelist add']
+prefix+'banchat on',prefix+'banchat off','#mtc start','#mtc stop','#bc','Assalamualaikum',"Assalamu'alaikum",'Samlikum','#donasi',prefix+'join',prefix+'limit',prefix+'help 2',prefix+'menu 2',prefix+'bug report',prefix+'activate','#whitelist add']
     return hasil
 }
 exports.commandArray = commandArray()

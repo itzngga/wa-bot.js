@@ -27,9 +27,10 @@ pm2 monit
 - Change BOT limit on settings/setting.json
 - Change Accepted Group Member count on settings/setting.json
 - Change BOT rest mode on settings/setting.json
+- Change BOT Group limit on settings/setting.json
 - Change prefix command on settings/setting.json, default is "!"
-- Get cekresi [apikey](https://github.com/ItzNgga/wa-bot.js/blob/master/index.js#L682-L692) at binderbyte.com
-- Get downloader util [apikey](https://github.com/ItzNgga/wa-bot.js/blob/master/lib/dl-video.js#L4-L19) at keepsaveit.com
+- Get cekresi [apikey](https://github.com/ItzNgga/wa-bot.js/blob/master/index.js#L700-L710) at binderbyte.com
+- Get downloader util [apikey](https://github.com/ItzNgga/wa-bot.js/blob/master/lib/dl-video.js#L3-L18) at keepsaveit.com
 - Do not copy my help/watermark template, use your idea
 
 ## Fix !ytmp3 error

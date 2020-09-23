@@ -11,6 +11,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ytdl = require("ytdl-core")
 const figlet = require('figlet');
 const translatte = require('translatte')
+var speed = require("performance-now")
 const parseString = require('xml2js').parseString;
 const cron = require('node-cron');
 const google = require('google-it')
@@ -23,13 +24,15 @@ let msgLimit = JSON.parse(fs.readFileSync('./settings/msgLimit.json'));
 let banned = JSON.parse(fs.readFileSync('./settings/banned.json'));
 let info = fs.readFileSync('./settings/info.txt', {encoding: 'utf-8'});
 const {help,license,donasi,bahasa,surah,help2,chromArgs,commandArray,adult} = require('./settings/template.js');
-let {prefix, banChats, restartState: isRestart,mtc: mtcState, whitelist ,sAdmin, limitCount, groupLimit} = setting
+let {prefix, banChats, restartState: isRestart,mtc: mtcState, whitelist ,sAdmin, limitCount, memberLimit, groupLimit} = setting
 const serverOption = {
     headless: true,
     qrRefreshS: 20,
     qrTimeout: 0,
     authTimeout: 0,
     autoRefresh: true,
+    blockAssets: true,
+    disableSpins: true,
     cacheEnabled: false,
     chromiumArgs: chromArgs
 }
@@ -48,8 +51,8 @@ let state = {
 }
 const isWhite = (chatId) => whitelist.includes(chatId) ? true : false
 const isWhiteList = (chatId) => {
-    if(muted.includes(chatId)) return false
     if(whitelist.includes(chatId)){
+        if(muted.includes(chatId)) return false
         return true
     }else{
         return false
@@ -107,20 +110,22 @@ const startServer = async (from) => {
         });
         cron.schedule("0 55 20 * * *", async () => {
             let chatsb = await client.getAllChatIds()
-            let sjfk = await client.getAllGroups()
-            Object.keys(sjfk).forEach(async (i) => {
-                let groupId = sjfk[i].groupMetadata.id
-                await client.sendText(groupId,`Maaf, bot melakukan pembersihan group harian :D`).then(async () => {
-                    if(isWhite(groupId)) return
-                    client.clearChat(groupId)
+            let groups = await client.getAllGroups()
+            let arrOfGroup = []
+            for(let index of groups){
+                arrOfGroup.push(index.groupMetadata.id._serialized)
+            }
+            let arrOfGroups = arrOfGroup.filter(x => !isWhite(x))
+            let chatsny = chatsb.filter(x => !isWhite(x))
+            for(let groupId of arrOfGroups){
+                client.sendText(groupId,`Maaf, bot melakukan pembersihan group harian :D`).then(async () => {
                     client.deleteChat(groupId)
                     client.leaveGroup(groupId)
-            })
-            })
-            Object.keys(chatsb).forEach(async (i) => {
-                if(isWhite(chatsb[i])) return
-                await client.deleteChat(chatsb[i])
-            })
+                })
+            }
+            for(let chats of chatsny){
+                await client.deleteChat(chats)
+            }
         console.log(color('~> [INFO] Deleted all chats'));
         });
         console.log('------------------------------------------------')
@@ -149,14 +154,14 @@ const startServer = async (from) => {
             if(mtcState === false){
                 const groups = await client.getAllGroups()
                 // BOT group count less than
-                if(groups.length > 25){
+                if(groups.length > groupLimit){
                     await client.sendText(chat.id, 'Maaf, Batas group yang dapat bot tampung sudah penuh').then(async () =>{
                         client.deleteChat(chat.id)
                         client.leaveGroup(chat.id)
                     })
                 }else{
-                    if(chat.groupMetadata.participants.length < groupLimit){
-                        await client.sendText(chat.id, `Maaf, BOT keluar jika member group tidak melebihi ${groupLimit} orang`).then(async () =>{
+                    if(chat.groupMetadata.participants.length < memberLimit){
+                        await client.sendText(chat.id, `Maaf, BOT keluar jika member group tidak melebihi ${memberLimit} orang`).then(async () =>{
                             client.deleteChat(chat.id)
                             client.leaveGroup(chat.id)
                         })
@@ -193,7 +198,7 @@ const startServer = async (from) => {
                 const cmd = type === 'chat' ? body.match(new RegExp(cmds, 'g')) : type === 'image' && caption ? caption : ''
                 const time = moment(t * 1000).format('HH:mm:ss')
                 const isUrl = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi);
-                const uaOverride = "WhatsApp/2.2029.4 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
+                const uaOverride = "WhatsApp/2.2037.6 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83";
                 const reply = async (message) => client.reply(chatId, message, id, true)
                 // BEGIN HELPER FUNCTION
                 function isMsgLimit(id){
@@ -202,7 +207,7 @@ const startServer = async (from) => {
                     for (let i of msgLimit){
                         if(i.id === id){
                             if (i.msg >= 12) {
-                                found === true
+                                found === true 
                                 reply('*[ANTI-SPAM]*\nMaaf, akun anda kami blok karena SPAM, dan tidak bisa di UNBLOK!')
                                 client.contactBlock(id)
                                 banned.push(id)
@@ -431,11 +436,11 @@ const startServer = async (from) => {
                             }else{
                                 let group = await client.getAllGroups()
                                 // BOT group count less than
-                                if(group.length > 25){
+                                if(group.length > groupLimit){
                                     return client.sendText(from, 'Maaf, Batas group yang dapat bot tampung sudah penuh')
                                 }else{
-                                    if(log.size < groupLimit && !isSadmin) {
-                                        return client.sendText(from, '[GAGAL] Group target tidak memiliki member melebihi '+groupLimit)
+                                    if(log.size < memberLimit && !isSadmin) {
+                                        return client.sendText(from, '[GAGAL] Group target tidak memiliki member melebihi '+memberLimit)
                                     }else{
                                         await client.joinGroupViaLink(args[1]).then(async () => {
                                             await client.sendText(from, 'Berhasil join ke group via link!')
@@ -478,7 +483,9 @@ const startServer = async (from) => {
                         var found = false
                         for(let lmt of limit){
                             if(lmt.id === serial){
-                                reply(`Sisa limit media anda tersisa : *${limitCount-lmt.limit}*`)
+                                let limitCounts = limitCount-lmt.limit
+                                if(limitCounts <= 0) return reply(`Limit media anda sudah habis`)
+                                reply(`Sisa limit media anda tersisa : *${limitCounts}*`)
                                 found = true
                             }
                         }
@@ -488,10 +495,6 @@ const startServer = async (from) => {
                             fs.writeFileSync('./settings/limit.json',JSON.stringify(limit, 2));
                             reply(`Sisa limit media anda tersisa : *${limitCount}*`)
                         }
-                        break
-                    case '#bot refresh':
-                        if(!isSadmin) return
-                        await client.refresh()
                         break
                     case prefix+'translate':
                         if(args[1] == undefined || args[2] == undefined) return
@@ -547,10 +550,9 @@ const startServer = async (from) => {
                     break
                     case prefix+'speed':
                     case prefix+'ping':
-                        var now = require("performance-now")
-                        const timestamp = now();
-                        const latensi = now() - timestamp
-                        client.sendText(from, `${latensi.toFixed(5)} detik`)
+                        const timestamp = speed();
+                        const latensi = speed() - timestamp
+                        reply(`${latensi.toFixed(5)} detik`)
                     break
                     case prefix+'qrcode':
                         if(isLimit(serial)) return
@@ -612,7 +614,7 @@ const startServer = async (from) => {
 ~> Jumlah post : ${post}
 ~> Followed : ${followed} followed
 ~> Followers : ${followers} followers
-~> Bio :
+~> Bio : ⮧⮧⮧
 -------------------------------------------------------------------
 ${biography}
 -------------------------------------------------------------------
@@ -894,21 +896,23 @@ _*Processing Sukses #XyZ BOT*_`
                     case '#bot clearall':
                         if(!isSadmin) return
                         client.sendText(from, 'Genosida di mulai!')
-                        const groupCount = await client.getAllChatIds()
-                        const lkist = await client.getAllGroups()
-                        Object.keys(lkist).forEach(async (i) => {
-                            let gid = lkist[i].contact.id
-                            if(isWhite(gid)) return false
-                            await client.sendText(gid,`Maaf, bot overload dan tercatat ${groupCount.length} chat aktif`).then(async () => {
-                                client.clearChat(gid)
+                        let chatsb = await client.getAllChatIds()
+                        let groupNya = await client.getAllGroups()
+                        let arrayOfGroup = []
+                        for(let index of groupNya){
+                            arrayOfGroup.push(index.groupMetadata.id._serialized)
+                        }
+                        let arrayOfGroups = arrayOfGroup.filter(x => !isWhite(x))
+                        let chatx = chatsb.filter(x => !isWhite(x))
+                        for(let gid of arrayOfGroups){
+                            client.sendText(gid,`Maaf, bot overload dan tercatat ${groupNya.length} chat aktif`).then(async () => {
                                 client.deleteChat(gid)
                                 client.leaveGroup(gid)
                             })
-                        })
-                        Object.keys(groupCount).forEach(async (i) => {
-                            if(isWhite(groupCount[i])) return
-                            await client.deleteChat(groupCount[i])
-                        })
+                        }
+                        for(let chatnya of chatx){
+                            client.deleteChat(chatnya)
+                        }
                         client.sendText(from, 'sukses!')
                         break
                     case prefix+'tiktok':
@@ -1141,15 +1145,12 @@ _*Processing Sukses #XyZ BOT*_`
                                                 ffmpeg(stream)
                                                 .audioBitrate(128)
                                                 .save(`audio/${videoid[1]}.mp3`)
-                                                .catch(err => reply('Link target private/block negara'))
                                                 .on('end', () => {
                                                 client.sendFile(from,'audio/'+ videoid[1] +'.mp3', `${videoid[1]}.mp3`)
                                                 });
                                             limitAdd(serial);
                                         }
-                                        }).catch(err => {
-                                            reply('Link target private/block negara')
-                                        });
+                                        })
                                     }
                                     ytmp3();
                                 }
